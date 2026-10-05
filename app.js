@@ -919,13 +919,11 @@ function setText(
 // =====================================================
 // DASHBOARD EXCEL DOWNLOAD
 // =====================================================
-// =====================================================
-// DASHBOARD EXCEL DOWNLOAD
-// =====================================================
 
 function downloadDashboardExcel() {
 
-  const btn = document.getElementById("excelDashboardBtn");
+  const btn =
+    document.getElementById("excelDashboardBtn");
 
   if (btn) {
     btn.disabled = true;
@@ -935,52 +933,95 @@ function downloadDashboardExcel() {
   apiGet("dashboardExcel")
     .then(function(response) {
 
-      if (!response || !response.success) {
+      console.log(
+        "Excel API Response:",
+        response
+      );
+
+      /*
+       * apiGet() already returns response.data
+       */
+      if (!response) {
         throw new Error(
-          response && response.message
-            ? response.message
-            : "Excel generation failed"
+          "Excel file data not received"
         );
       }
 
-      if (!response.data || !response.data.base64) {
-        throw new Error("Excel file data not received");
+      /*
+       * Apps Script returns:
+       * {
+       *   fileName: "...",
+       *   mimeType: "...",
+       *   data: "BASE64..."
+       * }
+       */
+      const base64 =
+        response.data;
+
+      if (!base64) {
+        throw new Error(
+          "Excel base64 data not received"
+        );
       }
 
-      const binary = atob(response.data.base64);
-      const bytes = new Uint8Array(binary.length);
+      const binary =
+        atob(base64);
 
-      for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
+      const bytes =
+        new Uint8Array(
+          binary.length
+        );
+
+      for (
+        let i = 0;
+        i < binary.length;
+        i++
+      ) {
+        bytes[i] =
+          binary.charCodeAt(i);
       }
 
-      const blob = new Blob(
-        [bytes],
-        {
-          type:
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        }
-      );
+      const blob =
+        new Blob(
+          [bytes],
+          {
+            type:
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          }
+        );
 
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
+      const url =
+        URL.createObjectURL(blob);
+
+      const a =
+        document.createElement("a");
 
       a.href = url;
+
       a.download =
         "DG_Fault_Tracker_Admin_" +
-        new Date().toISOString().slice(0, 10) +
+        new Date()
+          .toISOString()
+          .slice(0, 10) +
         ".xlsx";
 
       document.body.appendChild(a);
+
       a.click();
+
       document.body.removeChild(a);
 
-      URL.revokeObjectURL(url);
+      setTimeout(function() {
+        URL.revokeObjectURL(url);
+      }, 1000);
 
     })
     .catch(function(error) {
 
-      console.error("Excel download error:", error);
+      console.error(
+        "Excel download error:",
+        error
+      );
 
       alert(
         "❌ Excel download failed.\n\n" +
@@ -996,12 +1037,11 @@ function downloadDashboardExcel() {
       }
 
     });
+
 }
 document.addEventListener(
   "DOMContentLoaded",
   function() {
-
     loadDashboard();
-
   }
 );
