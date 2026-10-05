@@ -56,7 +56,7 @@ function apiGet(action, params = {}) {
           )
         );
 
-      }, 20000);
+      }, 60000);
 
 
     function cleanup() {
