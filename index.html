@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="theme-color"
+    content="#123f7a"
+  >
+
+  <title>DG Fault Tracker - Admin</title>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    /* =========================
+       HEADER
+    ========================= */
+
+    .header {
+      background:
+        linear-gradient(
+          135deg,
+          #123f7a,
+          #1769aa
+        );
+
+      color: white;
+
+      padding: 18px 24px;
+
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      box-shadow:
+        0 4px 15px
+        rgba(15, 55, 100, .18);
+
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .title {
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .subtitle {
+      margin-top: 4px;
+      font-size: 13px;
+      opacity: .85;
+    }
+
+    .badge {
+      background: #facc15;
+      color: #172554;
+
+      padding: 8px 15px;
+
+      border-radius: 20px;
+
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+
+    /* =========================
+       TABS
+    ========================= */
+
+    .tabs {
+      background: white;
+
+      display: flex;
+      gap: 8px;
+
+      padding: 12px 18px;
+
+      overflow-x: auto;
+
+      border-bottom:
+        1px solid #e2e8f0;
+
+      position: sticky;
+      top: 78px;
+      z-index: 90;
+    }
+
+    .tab {
+      border: 0;
+
+      background: #f1f5f9;
+
+      color: #475569;
+
+      padding: 11px 18px;
+
+      border-radius: 10px;
+
+      font-weight: 700;
+
+      cursor: pointer;
+
+      white-space: nowrap;
+    }
+
+    .tab.active {
+      background: #123f7a;
+      color: white;
+    }
+
+
+    /* =========================
+       MAIN
+    ========================= */
+
+    .container {
+      max-width: 1400px;
+
+      margin: auto;
+
+      padding: 22px;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+
+    /* =========================
+       DASHBOARD
+    ========================= */
+
+    .section-title {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 18px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      gap: 12px;
+
+      margin-bottom: 18px;
+
+      flex-wrap: wrap;
+    }
+
+    button.action {
+      border: 0;
+
+      background: #123f7a;
+
+      color: white;
+
+      padding: 10px 16px;
+
+      border-radius: 9px;
+
+      font-weight: 700;
+
+      cursor: pointer;
+    }
+
+    button.action:hover {
+      opacity: .9;
+    }
+
+
+    .kpi-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          auto-fit,
+          minmax(180px, 1fr)
+        );
+
+      gap: 16px;
+    }
+
+    .kpi {
+      background: white;
+
+      border-radius: 16px;
+
+      padding: 20px;
+
+      box-shadow:
+        0 5px 20px
+        rgba(15, 55, 100, .08);
+
+      border-left:
+        5px solid #1769aa;
+    }
+
+    .kpi-label {
+      font-size: 12px;
+
+      font-weight: 700;
+
+      color: #64748b;
+
+      text-transform: uppercase;
+    }
+
+    .kpi-value {
+      font-size: 32px;
+
+      font-weight: 900;
+
+      margin-top: 8px;
+
+      color: #123f7a;
+    }
+
+
+    .summary {
+      margin-top: 20px;
+
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          auto-fit,
+          minmax(220px, 1fr)
+        );
+
+      gap: 16px;
+    }
+
+    .summary-card {
+      background: white;
+
+      padding: 18px;
+
+      border-radius: 14px;
+
+      box-shadow:
+        0 5px 20px
+        rgba(15, 55, 100, .07);
+    }
+
+    .summary-label {
+      color: #64748b;
+
+      font-size: 12px;
+
+      font-weight: 700;
+    }
+
+    .summary-value {
+      margin-top: 7px;
+
+      font-size: 20px;
+
+      font-weight: 800;
+    }
+
+
+    /* =========================
+       TABLE CARD
+    ========================= */
+
+    .card {
+      background: white;
+
+      border-radius: 16px;
+
+      padding: 18px;
+
+      box-shadow:
+        0 5px 20px
+        rgba(15, 55, 100, .07);
+
+      margin-bottom: 20px;
+    }
+
+    .search {
+      width: 100%;
+
+      padding: 12px 14px;
+
+      border:
+        1px solid #cbd5e1;
+
+      border-radius: 9px;
+
+      outline: none;
+
+      margin-bottom: 14px;
+
+      font-size: 14px;
+    }
+
+    .table-wrap {
+      width: 100%;
+
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+
+      border-collapse: collapse;
+
+      min-width: 700px;
+    }
+
+    th {
+      background: #123f7a;
+
+      color: white;
+
+      padding: 11px;
+
+      text-align: left;
+
+      font-size: 12px;
+    }
+
+    td {
+      padding: 10px;
+
+      border-bottom:
+        1px solid #e2e8f0;
+
+      font-size: 13px;
+    }
+
+    tr:hover td {
+      background: #f8fafc;
+    }
+
+
+    /* =========================
+       LOADING
+    ========================= */
+
+    .loading {
+      padding: 35px;
+
+      text-align: center;
+
+      color: #64748b;
+
+      font-weight: 700;
+    }
+
+
+    /* =========================
+       MOBILE
+    ========================= */
+
+    @media (max-width: 600px) {
+
+      .header {
+        padding: 14px 15px;
+      }
+
+      .title {
+        font-size: 19px;
+      }
+
+      .subtitle {
+        font-size: 11px;
+      }
+
+      .badge {
+        padding: 7px 11px;
+      }
+
+      .tabs {
+        top: 67px;
+
+        padding:
+          9px 10px;
+      }
+
+      .container {
+        padding: 14px;
+      }
+
+      .kpi {
+        padding: 16px;
+      }
+
+      .kpi-value {
+        font-size: 27px;
+      }
+
+      .section-title {
+        font-size: 19px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+  <!-- =========================
+       HEADER
+  ========================== -->
+
+  <div class="header">
+
+    <div>
+
+      <div class="title">
+        📊 DG Fault Tracker
+      </div>
+
+      <div class="subtitle">
+        Admin Control Center
+      </div>
+
+    </div>
+
+    <div class="badge">
+      ADMIN
+    </div>
+
+  </div>
+
+
+  <!-- =========================
+       TABS
+  ========================== -->
+
+  <div class="tabs">
+
+    <button
+      class="tab active"
+      onclick="openTab('dashboard', this)"
+    >
+      📊 Dashboard
+    </button>
+
+    <button
+      class="tab"
+      onclick="openTab('faults', this)"
+    >
+      🔧 Fault Tracker
+    </button>
+
+    <button
+      class="tab"
+      onclick="openTab('sites', this)"
+    >
+      🏢 Site Master
+    </button>
+
+    <button
+      class="tab"
+      onclick="openTab('technicians', this)"
+    >
+      👨‍🔧 Technician Links
+    </button>
+
+  </div>
+
+
+  <!-- =========================
+       MAIN
+  ========================== -->
+
+  <main class="container">
+
+
+    <!-- =========================
+         DASHBOARD
+    ========================== -->
+
+    <section
+      id="dashboard"
+      class="section active"
+    >
+
+      <div class="toolbar">
+
+        <div class="section-title">
+          Dashboard
+        </div>
+
+        <button
+          class="action"
+          onclick="loadDashboard()"
+        >
+          🔄 Refresh
+        </button>
+
+      </div>
+
+
+      <div
+        id="dashboardLoading"
+        class="loading"
+      >
+        Loading dashboard...
+      </div>
+
+
+      <div
+        id="dashboardContent"
+        style="display:none"
+      >
+
+        <div class="kpi-grid">
+
+
+          <div class="kpi">
+            <div class="kpi-label">
+              Total Faults
+            </div>
+
+            <div
+              id="totalFaults"
+              class="kpi-value"
+            >
+              0
+            </div>
+          </div>
+
+
+          <div class="kpi">
+            <div class="kpi-label">
+              Open
+            </div>
+
+            <div
+              id="openFaults"
+              class="kpi-value"
+            >
+              0
+            </div>
+          </div>
+
+
+          <div class="kpi">
+            <div class="kpi-label">
+              In Progress
+            </div>
+
+            <div
+              id="progressFaults"
+              class="kpi-value"
+            >
+              0
+            </div>
+          </div>
+
+
+          <div class="kpi">
+            <div class="kpi-label">
+              Closed
+            </div>
+
+            <div
+              id="closedFaults"
+              class="kpi-value"
+            >
+              0
+            </div>
+          </div>
+
+
+          <div class="kpi">
+            <div class="kpi-label">
+              Waiting Material
+            </div>
+
+            <div
+              id="materialFaults"
+              class="kpi-value"
+            >
+              0
+            </div>
+          </div>
+
+
+          <div class="kpi">
+            <div class="kpi-label">
+              Waiting Vendor
+            </div>
+
+            <div
+              id="vendorFaults"
+              class="kpi-value"
+            >
+              0
+            </div>
+          </div>
+
+
+          <div class="kpi">
+            <div class="kpi-label">
+              Total Sites
+            </div>
+
+            <div
+              id="totalSites"
+              class="kpi-value"
+            >
+              0
+            </div>
+          </div>
+
+
+          <div class="kpi">
+            <div class="kpi-label">
+              Technicians
+            </div>
+
+            <div
+              id="totalTechnicians"
+              class="kpi-value"
+            >
+              0
+            </div>
+          </div>
+
+        </div>
+
+
+        <div class="summary">
+
+          <div class="summary-card">
+
+            <div class="summary-label">
+              Active Faults
+            </div>
+
+            <div
+              id="activeFaults"
+              class="summary-value"
+            >
+              0
+            </div>
+
+          </div>
+
+
+          <div class="summary-card">
+
+            <div class="summary-label">
+              Closure Rate
+            </div>
+
+            <div
+              id="closureRate"
+              class="summary-value"
+            >
+              0%
+            </div>
+
+          </div>
+
+
+          <div class="summary-card">
+
+            <div class="summary-label">
+              Last Refresh
+            </div>
+
+            <div
+              id="lastRefresh"
+              class="summary-value"
+            >
+              -
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================
+         FAULT TRACKER
+    ========================== -->
+
+    <section
+      id="faults"
+      class="section"
+    >
+
+      <div class="section-title">
+        🔧 Fault Tracker
+      </div>
+
+      <div class="card">
+
+        <input
+          id="faultSearch"
+          class="search"
+          type="text"
+          placeholder="Search fault / site / technician..."
+          oninput="filterFaults()"
+        >
+
+        <div
+          id="faultLoading"
+          class="loading"
+        >
+          Open Fault Tracker tab to load data.
+        </div>
+
+        <div class="table-wrap">
+
+          <table>
+
+            <thead id="faultHead"></thead>
+
+            <tbody id="faultBody"></tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================
+         SITE MASTER
+    ========================== -->
+
+    <section
+      id="sites"
+      class="section"
+    >
+
+      <div class="section-title">
+        🏢 Site Master
+      </div>
+
+      <div class="card">
+
+        <input
+          id="siteSearch"
+          class="search"
+          type="text"
+          placeholder="Search site / technician..."
+          oninput="filterSites()"
+        >
+
+        <div
+          id="siteLoading"
+          class="loading"
+        >
+          Open Site Master tab to load data.
+        </div>
+
+        <div class="table-wrap">
+
+          <table>
+
+            <thead id="siteHead"></thead>
+
+            <tbody id="siteBody"></tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================
+         TECHNICIAN LINKS
+    ========================== -->
+
+    <section
+      id="technicians"
+      class="section"
+    >
+
+      <div class="section-title">
+        👨‍🔧 Technician Links
+      </div>
+
+      <div class="card">
+
+        <input
+          id="techSearch"
+          class="search"
+          type="text"
+          placeholder="Search technician..."
+          oninput="filterTechnicians()"
+        >
+
+        <div
+          id="techLoading"
+          class="loading"
+        >
+          Open Technician Links tab to load data.
+        </div>
+
+        <div class="table-wrap">
+
+          <table>
+
+            <thead id="techHead"></thead>
+
+            <tbody id="techBody"></tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+  </main>
+
+
+  <!-- =========================
+       JAVASCRIPT
+       ========================== -->
+
+  <script src="app.js"></script>
+
+
+</body>
+
+</html>
