@@ -919,6 +919,9 @@ function setText(
 // =====================================================
 // DASHBOARD EXCEL DOWNLOAD
 // =====================================================
+// =====================================================
+// DASHBOARD EXCEL DOWNLOAD
+// =====================================================
 
 function downloadDashboardExcel() {
 
@@ -929,9 +932,8 @@ function downloadDashboardExcel() {
     btn.innerText = "⏳ Preparing...";
   }
 
-  apiGet("dashboardExcel", function(response) {
-
-    try {
+  apiGet("dashboardExcel")
+    .then(function(response) {
 
       if (!response || !response.success) {
         throw new Error(
@@ -946,7 +948,6 @@ function downloadDashboardExcel() {
       }
 
       const binary = atob(response.data.base64);
-
       const bytes = new Uint8Array(binary.length);
 
       for (let i = 0; i < binary.length; i++) {
@@ -962,25 +963,22 @@ function downloadDashboardExcel() {
       );
 
       const url = URL.createObjectURL(blob);
-
       const a = document.createElement("a");
 
       a.href = url;
-
       a.download =
         "DG_Fault_Tracker_Admin_" +
         new Date().toISOString().slice(0, 10) +
         ".xlsx";
 
       document.body.appendChild(a);
-
       a.click();
-
       document.body.removeChild(a);
 
       URL.revokeObjectURL(url);
 
-    } catch (error) {
+    })
+    .catch(function(error) {
 
       console.error("Excel download error:", error);
 
@@ -989,17 +987,15 @@ function downloadDashboardExcel() {
         (error.message || error)
       );
 
-    } finally {
+    })
+    .finally(function() {
 
       if (btn) {
         btn.disabled = false;
         btn.innerText = "📥 Excel";
       }
 
-    }
-
-  });
-
+    });
 }
 document.addEventListener(
   "DOMContentLoaded",
