@@ -916,7 +916,91 @@ function setText(
 /* =====================================================
    INITIAL LOAD
    ===================================================== */
+// =====================================================
+// DASHBOARD EXCEL DOWNLOAD
+// =====================================================
 
+function downloadDashboardExcel() {
+
+  const btn = document.getElementById("excelDashboardBtn");
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = "⏳ Preparing...";
+  }
+
+  apiGet("dashboardExcel", function(response) {
+
+    try {
+
+      if (!response || !response.success) {
+        throw new Error(
+          response && response.message
+            ? response.message
+            : "Excel generation failed"
+        );
+      }
+
+      if (!response.data || !response.data.base64) {
+        throw new Error("Excel file data not received");
+      }
+
+      const binary = atob(response.data.base64);
+
+      const bytes = new Uint8Array(binary.length);
+
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+
+      const blob = new Blob(
+        [bytes],
+        {
+          type:
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        }
+      );
+
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+
+      a.href = url;
+
+      a.download =
+        "DG_Fault_Tracker_Admin_" +
+        new Date().toISOString().slice(0, 10) +
+        ".xlsx";
+
+      document.body.appendChild(a);
+
+      a.click();
+
+      document.body.removeChild(a);
+
+      URL.revokeObjectURL(url);
+
+    } catch (error) {
+
+      console.error("Excel download error:", error);
+
+      alert(
+        "❌ Excel download failed.\n\n" +
+        (error.message || error)
+      );
+
+    } finally {
+
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = "📥 Excel";
+      }
+
+    }
+
+  });
+
+}
 document.addEventListener(
   "DOMContentLoaded",
   function() {
