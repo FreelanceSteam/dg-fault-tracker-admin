@@ -1,29 +1,1976 @@
-const API_URL="https://script.google.com/macros/s/AKfycbzY8la37LIrnj4T6Uy4lUL5DY21NzpLnaNfbg3TZST7KpaYTesaQ3qFbCqk8QsQSZT0PA/exec";
-let faultRows=[],siteRows=[],technicianRows=[],technicianOptions=[],siteChanges={},technicianChanges={};
-function safe(v){return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");}
-function msg(text,ok){const b=document.getElementById("message");if(!b)return;b.textContent=text;b.className="message "+(ok?"ok":"err");setTimeout(()=>b.className="message",5000);}
-function apiGet(action,params={}){return new Promise((resolve,reject)=>{const cb="cb_"+Date.now()+"_"+Math.random().toString(36).slice(2),s=document.createElement("script"),q=new URLSearchParams({action,callback:cb,...params}),timer=setTimeout(()=>{clean();reject(new Error("API request timed out."));},30000);function clean(){clearTimeout(timer);delete window[cb];s.remove();}window[cb]=r=>{clean();if(!r||r.success===false){reject(new Error(r?.message||"API request failed."));return;}resolve(r.data);};s.onerror=()=>{clean();reject(new Error("Unable to connect to Apps Script API."));};s.src=API_URL+"?"+q.toString();document.body.appendChild(s);});}
-function showTab(id,btn){document.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');if(btn)btn.classList.add('active');if(id==='dashboardTab')loadDashboard();if(id==='faultTab'&&!faultRows.length)loadFaults();if(id==='siteTab'&&!siteRows.length)loadSites();if(id==='techTab'&&!technicianRows.length)loadTechnicians();}
-function setText(id,v){const e=document.getElementById(id);if(e)e.textContent=v??"";}
-async function loadDashboard(){const l=document.getElementById('dashboardLoading'),c=document.getElementById('dashboardContent');l.style.display='block';c.classList.add('hidden');try{const d=await apiGet('dashboard');setText('totalFaults',d.totalFaults||0);setText('openFaults',d.open||0);setText('progressFaults',d.inProgress||0);setText('closedFaults',d.closed||0);setText('materialFaults',d.waitingMaterial||0);setText('vendorFaults',d.waitingVendor||0);setText('totalSites',d.totalSites||0);setText('totalTechnicians',d.totalTechnicians||0);setText('activeFaults',Number(d.open||0)+Number(d.inProgress||0));setText('closureRate',(Number(d.totalFaults)?Math.round(Number(d.closed||0)/Number(d.totalFaults)*100):0)+'%');setText('lastRefresh',new Date().toLocaleString());l.style.display='none';c.classList.remove('hidden');}catch(e){l.innerHTML='❌ Dashboard Error: '+safe(e.message||e);}}
-async function loadFaults(){const b=document.getElementById('faultBody');b.innerHTML='<tr><td colspan="10" class="loading">Loading faults...</td></tr>';try{const d=await apiGet('faults');faultRows=Array.isArray(d)?d:(d?.rows||[]);populateFaultTechnicianFilter();renderFaults(faultRows);}catch(e){b.innerHTML='<tr><td colspan="10" class="loading">❌ '+safe(e.message||e)+'</td></tr>';}}
-function populateFaultTechnicianFilter(){const s=document.getElementById('faultTechFilter'),old=s.value,n=[...new Set(faultRows.map(r=>String(r.technician||'').trim()).filter(Boolean))].sort();s.innerHTML='<option value="">All Technicians</option>'+n.map(x=>'<option value="'+safe(x)+'">'+safe(x)+'</option>').join('');s.value=old;}
-function opt(v,c){return '<option value="'+safe(v)+'" '+(v===c?'selected':'')+'>'+safe(v)+'</option>';}
-function renderFaults(rows){setText('faultCount','Showing '+rows.length+' faults');const b=document.getElementById('faultBody');if(!rows.length){b.innerHTML='<tr><td colspan="10" class="loading">No fault records found.</td></tr>';return;}b.innerHTML=rows.map(r=>{const st=String(r.status||'Open');return '<tr><td>'+safe(r.entryDate)+'</td><td>'+safe(r.technician)+'</td><td>'+safe(r.site)+'</td><td>'+safe(r.dgMake)+'</td><td>'+safe(r.dgKva)+'</td><td>'+safe(r.fault)+'</td><td>'+safe(r.remark)+'</td><td>'+safe(r.docket)+'</td><td>'+safe(r.faultDate)+'</td><td><select class="status-select" data-row="'+Number(r.rowNumber||0)+'" onchange="updateFaultStatus(this)">'+opt('Open',st)+opt('In Progress',st)+opt('Closed',st)+opt('Waiting for Material',st)+opt('Waiting for Vendor',st)+'</select></td></tr>';}).join('');}
-function filterFaults(){const q=document.getElementById('faultSearch').value.toLowerCase().trim(),t=document.getElementById('faultTechFilter').value.toLowerCase(),s=document.getElementById('faultStatusFilter').value.toLowerCase();renderFaults(faultRows.filter(r=>{const a=[r.entryDate,r.technician,r.site,r.dgMake,r.dgKva,r.fault,r.remark,r.docket,r.faultDate,r.status].join(' ').toLowerCase();return(!q||a.includes(q))&&(!t||String(r.technician||'').toLowerCase()===t)&&(!s||String(r.status||'').toLowerCase()===s);}));}
-async function updateFaultStatus(el){const row=Number(el.dataset.row),value=el.value;if(!row){msg('❌ Fault row number missing.',false);return;}el.disabled=true;try{const r=await apiGet('updateFaultStatus',{row,value});if(!r||r.success===false)throw new Error(r?.message||'Status update failed.');msg('✅ Fault status updated.',true);await Promise.all([loadFaults(),loadDashboard()]);}catch(e){msg('❌ '+(e.message||e),false);}finally{el.disabled=false;}}
-async function loadSites(){const b=document.getElementById('siteBody');b.innerHTML='<tr><td colspan="3" class="loading">Loading sites...</td></tr>';try{const d=await apiGet('sites');siteRows=Array.isArray(d)?d:(d?.rows||[]);await loadTechnicianNames();renderSites(siteRows);}catch(e){b.innerHTML='<tr><td colspan="3" class="loading">❌ '+safe(e.message||e)+'</td></tr>';}}
-async function loadTechnicianNames(){try{const d=await apiGet('technicians'),a=Array.isArray(d)?d:(d?.rows||[]);technicianOptions=[...new Set(a.map(r=>String(r.technician||r.name||r.technicianName||r[0]||'')).filter(Boolean))].sort();}catch(e){technicianOptions=[];}}
-function renderSites(rows){setText('siteCount','Showing '+rows.length+' sites');const b=document.getElementById('siteBody');if(!rows.length){b.innerHTML='<tr><td colspan="3" class="loading">No sites found.</td></tr>';return;}b.innerHTML=rows.map(r=>{const site=String(r.sapId||r.site||r.siteId||''),cur=String(r.technician||''),opts='<option value="">-- Unassigned --</option>'+technicianOptions.map(n=>'<option value="'+safe(n)+'" '+(n===cur?'selected':'')+'>'+safe(n)+'</option>').join('');return '<tr><td>'+safe(site)+'</td><td>'+safe(r.siteType)+'</td><td><select class="select editable" data-site="'+safe(site)+'" onchange="markSiteChange(this)">'+opts+'</select></td></tr>';}).join('');}
-function markSiteChange(el){siteChanges[el.dataset.site]=el.value;}
-function filterSites(){const q=document.getElementById('siteSearch').value.toLowerCase().trim();renderSites(siteRows.filter(r=>[r.sapId,r.site,r.siteId,r.siteType,r.technician].join(' ').toLowerCase().includes(q)));}
-async function saveSiteChanges(){const keys=Object.keys(siteChanges);if(!keys.length){msg('No site changes to save.',false);return;}const btn=document.getElementById('saveSitesBtn');btn.disabled=true;let failed=0;try{await Promise.all(keys.map(async site=>{try{const r=await apiGet('updateSiteTechnician',{pin:'',site,technician:siteChanges[site]});if(!r||r.success===false)failed++;}catch(e){failed++;}}));if(failed)msg('⚠ '+failed+' site change(s) failed.',false);else{siteChanges={};msg('✅ All site technician changes saved.',true);await Promise.all([loadSites(),loadDashboard()]);}}finally{btn.disabled=false;}}
-async function addTechnician(){const i=document.getElementById('newTechName'),name=String(i.value||'').trim();if(!name){msg('Please enter Technician Name.',false);i.focus();return;}try{const r=await apiGet('addNewTechnician',{name});if(!r||r.success===false)throw new Error(r?.message||'Failed to add technician.');document.getElementById('newTechResult').textContent='✅ '+name+' added successfully. Link: '+(r.link||'');msg('✅ Technician added successfully.',true);i.value='';await Promise.all([loadTechnicians(),loadSites(),loadDashboard()]);}catch(e){msg('❌ '+(e.message||e),false);}}
-async function loadTechnicians(){const b=document.getElementById('techBody');b.innerHTML='<tr><td colspan="4" class="loading">Loading technicians...</td></tr>';try{const d=await apiGet('technicians');technicianRows=Array.isArray(d)?d:(d?.rows||[]);technicianChanges={};renderTechnicians(technicianRows);}catch(e){b.innerHTML='<tr><td colspan="4" class="loading">❌ '+safe(e.message||e)+'</td></tr>';}}
-function renderTechnicians(rows){setText('techCount','Showing '+rows.length+' technicians');const b=document.getElementById('techBody');if(!rows.length){b.innerHTML='<tr><td colspan="4" class="loading">No technician records found.</td></tr>';return;}b.innerHTML=rows.map((r,i)=>{const n=r.technician||r.name||r.technicianName||r[0]||'',c=r.siteCount!=null?r.siteCount:(r.count!=null?r.count:''),t=r.token||r.Token||r[2]||'',l=r.link||r.technicianLink||r.url||r[3]||'';return '<tr><td><input class="input editable" data-index="'+i+'" value="'+safe(n)+'" onchange="markTechChange(this)"></td><td>'+safe(c)+'</td><td>'+safe(t)+'</td><td class="link">'+(l?'<a href="'+safe(l)+'" target="_blank" rel="noopener">'+safe(l)+'</a>':'')+'</td></tr>';}).join('');}
-function markTechChange(el){technicianChanges[Number(el.dataset.index)]=el.value.trim();}
-function filterTechnicians(){const q=document.getElementById('techSearch').value.toLowerCase().trim();renderTechnicians(technicianRows.filter(r=>[r.technician,r.name,r.technicianName,r.token,r.Token].join(' ').toLowerCase().includes(q)));}
-async function saveTechnicianChanges(){const keys=Object.keys(technicianChanges);if(!keys.length){msg('No technician changes to save.',false);return;}const btn=document.getElementById('saveTechBtn');btn.disabled=true;let failed=0;try{await Promise.all(keys.map(async k=>{const r=technicianRows[Number(k)],token=r.token||r.Token||r[2]||'';try{const x=await apiGet('updateTechnicianName',{token,name:technicianChanges[k]});if(!x||x.success===false)failed++;}catch(e){failed++;}}));if(failed)msg('⚠ Some technician changes failed.',false);else{technicianChanges={};msg('✅ Technician changes saved.',true);await Promise.all([loadTechnicians(),loadSites(),loadDashboard()]);}}finally{btn.disabled=false;}}
-function downloadTableExcel(id,name){const table=document.getElementById(id);if(!table){msg('Table not found.',false);return;}const clone=table.cloneNode(true);clone.querySelectorAll('select,input').forEach(e=>{e.parentElement.textContent=e.value;});const html='<!DOCTYPE html><html><head><meta charset="UTF-8"><style>table{border-collapse:collapse}th,td{border:1px solid #999;padding:6px}th{background:#123f7a;color:#fff}</style></head><body>'+clone.outerHTML+'</body></html>',blob=new Blob([html],{type:'application/vnd.ms-excel'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);}
-async function downloadDashboardExcel(){try{const r=await apiGet('dashboardExcel');if(!r||!r.base64)throw new Error('Excel file data not received.');const bin=atob(r.base64),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);const blob=new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='DG_Fault_Tracker_Admin_'+new Date().toISOString().slice(0,10)+'.xlsx';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);}catch(e){msg('❌ Excel download failed: '+(e.message||e),false);}}
-window.addEventListener('load',loadDashboard);
+/* =====================================================
+   DG FAULT TRACKER - GITHUB ADMIN APP
+   Google Apps Script API
+   ===================================================== */
+
+const API_URL =
+  "https://script.google.com/macros/s/AKfycbzY8la37LIrnj4T6Uy4lUL5DY21NzpLnaNfbg3TZST7KpaYTesaQ3qFbCqk8QsQSZT0PA/exec";
+
+
+/* =====================================================
+   GLOBAL DATA
+   ===================================================== */
+
+let faultRows = [];
+let siteRows = [];
+let technicianRows = [];
+
+let siteChanges = {};
+let technicianChanges = {};
+
+
+/* =====================================================
+   API - JSONP
+   ===================================================== */
+
+function apiGet(action, params = {}) {
+
+  return new Promise(function(resolve, reject) {
+
+    const callbackName =
+      "dgApi_" +
+      Date.now() +
+      "_" +
+      Math.floor(Math.random() * 100000);
+
+    const script =
+      document.createElement("script");
+
+    const query =
+      new URLSearchParams();
+
+    query.set("action", action);
+    query.set("callback", callbackName);
+
+    Object.keys(params).forEach(function(key) {
+
+      if (
+        params[key] !== undefined &&
+        params[key] !== null
+      ) {
+
+        query.set(
+          key,
+          String(params[key])
+        );
+
+      }
+
+    });
+
+    let finished = false;
+
+    const timeout =
+      setTimeout(function() {
+
+        if (finished) return;
+
+        finished = true;
+
+        cleanup();
+
+        reject(
+          new Error(
+            "API request timed out."
+          )
+        );
+
+      }, 30000);
+
+
+    function cleanup() {
+
+      clearTimeout(timeout);
+
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+
+      try {
+        delete window[callbackName];
+      } catch(e) {
+        window[callbackName] = undefined;
+      }
+
+    }
+
+
+    window[callbackName] =
+      function(response) {
+
+        if (finished) return;
+
+        finished = true;
+
+        cleanup();
+
+        if (
+          response &&
+          response.success === false
+        ) {
+
+          reject(
+            new Error(
+              response.message ||
+              "API error"
+            )
+          );
+
+          return;
+
+        }
+
+        resolve(
+          response &&
+          response.data !== undefined
+            ? response.data
+            : response
+        );
+
+      };
+
+
+    script.onerror =
+      function() {
+
+        if (finished) return;
+
+        finished = true;
+
+        cleanup();
+
+        reject(
+          new Error(
+            "Unable to connect to Apps Script API."
+          )
+        );
+
+      };
+
+
+    script.src =
+      API_URL +
+      "?" +
+      query.toString();
+
+    document.body.appendChild(script);
+
+  });
+
+}
+
+
+/* =====================================================
+   TAB CONTROL
+   ===================================================== */
+
+function openTab(tabId, button) {
+
+  document
+    .querySelectorAll(".section")
+    .forEach(function(section) {
+
+      section.classList.remove("active");
+
+    });
+
+
+  document
+    .querySelectorAll(".tab")
+    .forEach(function(tab) {
+
+      tab.classList.remove("active");
+
+    });
+
+
+  const section =
+    document.getElementById(tabId);
+
+  if (section) {
+    section.classList.add("active");
+  }
+
+
+  if (button) {
+    button.classList.add("active");
+  }
+
+
+  if (tabId === "dashboard") {
+    loadDashboard();
+  }
+
+  if (tabId === "faults") {
+    loadFaults();
+  }
+
+  if (tabId === "sites") {
+    loadSites();
+  }
+
+  if (tabId === "technicians") {
+    loadTechnicians();
+  }
+
+}
+
+
+/* =====================================================
+   DASHBOARD
+   ===================================================== */
+
+async function loadDashboard() {
+
+  const loading =
+    document.getElementById(
+      "dashboardLoading"
+    );
+
+  const errorBox =
+    document.getElementById(
+      "dashboardError"
+    );
+
+
+  if (loading) {
+
+    loading.style.display =
+      "block";
+
+    loading.textContent =
+      "Loading dashboard...";
+
+  }
+
+  if (errorBox) {
+    errorBox.style.display =
+      "none";
+  }
+
+
+  try {
+
+    const data =
+      await apiGet("dashboard");
+
+
+    setText(
+      "totalFaults",
+      data.totalFaults || 0
+    );
+
+    setText(
+      "openFaults",
+      data.open || 0
+    );
+
+    setText(
+      "inProgressFaults",
+      data.inProgress || 0
+    );
+
+    setText(
+      "closedFaults",
+      data.closed || 0
+    );
+
+    setText(
+      "waitingMaterial",
+      data.waitingMaterial || 0
+    );
+
+    setText(
+      "waitingVendor",
+      data.waitingVendor || 0
+    );
+
+    setText(
+      "totalSites",
+      data.totalSites || 0
+    );
+
+    setText(
+      "totalTechnicians",
+      data.totalTechnicians || 0
+    );
+
+
+    setText(
+      "summaryTotalFaults",
+      data.totalFaults || 0
+    );
+
+    setText(
+      "summaryOpen",
+      data.open || 0
+    );
+
+    setText(
+      "summaryClosed",
+      data.closed || 0
+    );
+
+
+    const pending =
+      Number(data.totalFaults || 0) -
+      Number(data.closed || 0);
+
+    setText(
+      "summaryPending",
+      pending < 0 ? 0 : pending
+    );
+
+
+  } catch(error) {
+
+    console.error(
+      "Dashboard error:",
+      error
+    );
+
+    if (errorBox) {
+
+      errorBox.style.display =
+        "block";
+
+      errorBox.textContent =
+        "Dashboard Error: " +
+        (
+          error.message ||
+          error
+        );
+
+    }
+
+  } finally {
+
+    if (loading) {
+      loading.style.display =
+        "none";
+    }
+
+  }
+
+}
+
+
+/* =====================================================
+   FAULT TRACKER
+   ===================================================== */
+
+async function loadFaults() {
+
+  const body =
+    document.getElementById(
+      "faultBody"
+    );
+
+  const head =
+    document.getElementById(
+      "faultHead"
+    );
+
+  const loading =
+    document.getElementById(
+      "faultLoading"
+    );
+
+
+  if (loading) {
+    loading.style.display =
+      "block";
+    loading.textContent =
+      "Loading faults...";
+  }
+
+
+  if (body) {
+    body.innerHTML = "";
+  }
+
+
+  try {
+
+    const data =
+      await apiGet("faults");
+
+
+    faultRows =
+      Array.isArray(data)
+        ? data
+        : (
+            data &&
+            Array.isArray(data.rows)
+              ? data.rows
+              : []
+          );
+
+
+    renderFaultHeader();
+
+    populateFaultTechnicianFilter();
+
+    renderFaults(faultRows);
+
+
+  } catch(error) {
+
+    console.error(
+      "Fault loading error:",
+      error
+    );
+
+    if (body) {
+
+      body.innerHTML =
+        '<tr><td colspan="10" class="error">' +
+        escapeHtml(
+          error.message || error
+        ) +
+        '</td></tr>';
+
+    }
+
+  } finally {
+
+    if (loading) {
+      loading.style.display =
+        "none";
+    }
+
+  }
+
+}
+
+
+function renderFaultHeader() {
+
+  const head =
+    document.getElementById(
+      "faultHead"
+    );
+
+  if (!head) return;
+
+
+  const columns = [
+    "Entry Date",
+    "Technician",
+    "Site",
+    "DG Make",
+    "DG KVA",
+    "Fault",
+    "Remark",
+    "Docket",
+    "Fault Date",
+    "Status"
+  ];
+
+
+  head.innerHTML =
+    "<tr>" +
+    columns.map(function(col) {
+
+      return (
+        "<th>" +
+        escapeHtml(col) +
+        "</th>"
+      );
+
+    }).join("") +
+    "</tr>";
+
+}
+
+
+function populateFaultTechnicianFilter() {
+
+  const select =
+    document.getElementById(
+      "faultTechnicianFilter"
+    );
+
+  if (!select) return;
+
+
+  const current =
+    select.value;
+
+
+  const technicians = [];
+
+
+  faultRows.forEach(function(row) {
+
+    const name =
+      String(
+        row.technician ||
+        ""
+      ).trim();
+
+    if (
+      name &&
+      technicians.indexOf(name) === -1
+    ) {
+
+      technicians.push(name);
+
+    }
+
+  });
+
+
+  technicians.sort();
+
+
+  select.innerHTML =
+    '<option value="">All Technicians</option>';
+
+
+  technicians.forEach(function(name) {
+
+    const option =
+      document.createElement(
+        "option"
+      );
+
+    option.value = name;
+    option.textContent = name;
+
+    select.appendChild(option);
+
+  });
+
+
+  if (
+    technicians.indexOf(current) !== -1
+  ) {
+
+    select.value = current;
+
+  }
+
+}
+
+
+function renderFaults(rows) {
+
+  const body =
+    document.getElementById(
+      "faultBody"
+    );
+
+  if (!body) return;
+
+
+  if (!rows.length) {
+
+    body.innerHTML =
+      '<tr><td colspan="10" class="loading">' +
+      "No fault records found." +
+      "</td></tr>";
+
+    return;
+
+  }
+
+
+  body.innerHTML =
+    rows.map(function(row) {
+
+      const status =
+        String(
+          row.status ||
+          "Open"
+        ).trim();
+
+
+      return (
+        "<tr>" +
+
+        "<td>" +
+        escapeHtml(row.entryDate) +
+        "</td>" +
+
+        "<td>" +
+        escapeHtml(row.technician) +
+        "</td>" +
+
+        "<td><strong>" +
+        escapeHtml(row.site) +
+        "</strong></td>" +
+
+        "<td>" +
+        escapeHtml(row.dgMake) +
+        "</td>" +
+
+        "<td>" +
+        escapeHtml(row.dgKva) +
+        "</td>" +
+
+        "<td>" +
+        escapeHtml(row.fault) +
+        "</td>" +
+
+        "<td>" +
+        escapeHtml(row.remark) +
+        "</td>" +
+
+        "<td>" +
+        escapeHtml(row.docket) +
+        "</td>" +
+
+        "<td>" +
+        escapeHtml(row.faultDate) +
+        "</td>" +
+
+        "<td>" +
+
+        '<select class="status" ' +
+        'data-row="' +
+        Number(row.rowNumber || 0) +
+        '" ' +
+        'onchange="updateFaultStatus(this)">' +
+
+        statusOption(
+          "Open",
+          status
+        ) +
+
+        statusOption(
+          "In Progress",
+          status
+        ) +
+
+        statusOption(
+          "Closed",
+          status
+        ) +
+
+        statusOption(
+          "Waiting for Material",
+          status
+        ) +
+
+        statusOption(
+          "Waiting for Vendor",
+          status
+        ) +
+
+        "</select>" +
+
+        "</td>" +
+
+        "</tr>"
+      );
+
+    }).join("");
+
+}
+
+
+function statusOption(
+  value,
+  current
+) {
+
+  return (
+    '<option value="' +
+    escapeHtml(value) +
+    '"' +
+    (
+      value.toLowerCase() ===
+      current.toLowerCase()
+        ? " selected"
+        : ""
+    ) +
+    ">" +
+    escapeHtml(value) +
+    "</option>"
+  );
+
+}
+
+
+function filterFaults() {
+
+  const search =
+    String(
+      document.getElementById(
+        "faultSearch"
+      )?.value || ""
+    )
+      .toLowerCase()
+      .trim();
+
+
+  const technician =
+    String(
+      document.getElementById(
+        "faultTechnicianFilter"
+      )?.value || ""
+    )
+      .toLowerCase()
+      .trim();
+
+
+  const status =
+    String(
+      document.getElementById(
+        "faultStatusFilter"
+      )?.value || ""
+    )
+      .toLowerCase()
+      .trim();
+
+
+  const filtered =
+    faultRows.filter(
+      function(row) {
+
+        const text =
+          [
+            row.entryDate,
+            row.technician,
+            row.site,
+            row.dgMake,
+            row.dgKva,
+            row.fault,
+            row.remark,
+            row.docket,
+            row.faultDate,
+            row.status
+          ]
+            .join(" ")
+            .toLowerCase();
+
+
+        const techMatch =
+          !technician ||
+          String(
+            row.technician || ""
+          )
+            .toLowerCase()
+            .trim() === technician;
+
+
+        const statusMatch =
+          !status ||
+          String(
+            row.status || ""
+          )
+            .toLowerCase()
+            .trim() === status;
+
+
+        return (
+          (!search || text.includes(search)) &&
+          techMatch &&
+          statusMatch
+        );
+
+      }
+    );
+
+
+  renderFaults(filtered);
+
+}
+
+
+async function updateFaultStatus(select) {
+
+  const row =
+    Number(
+      select.dataset.row
+    );
+
+  const value =
+    select.value;
+
+
+  if (!row) {
+
+    alert(
+      "❌ Fault row number missing."
+    );
+
+    return;
+
+  }
+
+
+  const oldValue =
+    select.dataset.oldValue ||
+    "";
+
+
+  select.dataset.oldValue =
+    value;
+
+
+  try {
+
+    await apiGet(
+      "updateFaultStatus",
+      {
+        row: row,
+        value: value
+      }
+    );
+
+
+    const found =
+      faultRows.find(
+        function(item) {
+
+          return Number(
+            item.rowNumber
+          ) === row;
+
+        }
+      );
+
+
+    if (found) {
+      found.status = value;
+    }
+
+
+    alert(
+      "✅ Fault status updated."
+    );
+
+
+    loadDashboard();
+
+
+  } catch(error) {
+
+    alert(
+      "❌ Status update failed.\n\n" +
+      (
+        error.message ||
+        error
+      )
+    );
+
+
+    if (oldValue) {
+      select.value = oldValue;
+    }
+
+  }
+
+}
+
+
+/* =====================================================
+   SITE MASTER
+   ===================================================== */
+
+async function loadSites() {
+
+  const body =
+    document.getElementById(
+      "siteBody"
+    );
+
+  const head =
+    document.getElementById(
+      "siteHead"
+    );
+
+  const loading =
+    document.getElementById(
+      "siteLoading"
+    );
+
+
+  siteChanges = {};
+
+
+  if (loading) {
+    loading.style.display =
+      "block";
+  }
+
+
+  if (body) {
+    body.innerHTML = "";
+  }
+
+
+  try {
+
+    const data =
+      await apiGet("sites");
+
+
+    siteRows =
+      Array.isArray(data)
+        ? data
+        : (
+            data &&
+            Array.isArray(data.rows)
+              ? data.rows
+              : []
+          );
+
+
+    if (head) {
+
+      head.innerHTML =
+        "<tr>" +
+        "<th>SAP ID</th>" +
+        "<th>Site Type</th>" +
+        "<th>Technician</th>" +
+        "</tr>";
+
+    }
+
+
+    renderSites(siteRows);
+
+  } catch(error) {
+
+    console.error(
+      "Site loading error:",
+      error
+    );
+
+    if (body) {
+
+      body.innerHTML =
+        '<tr><td colspan="3" class="error">' +
+        escapeHtml(
+          error.message || error
+        ) +
+        "</td></tr>";
+
+    }
+
+  } finally {
+
+    if (loading) {
+      loading.style.display =
+        "none";
+    }
+
+  }
+
+}
+
+
+async function loadTechnicianNames() {
+
+  try {
+
+    const data =
+      await apiGet(
+        "technicians"
+      );
+
+    return Array.isArray(data)
+      ? data
+      : (
+          data &&
+          Array.isArray(data.rows)
+            ? data.rows
+            : []
+        );
+
+  } catch(error) {
+
+    console.error(
+      "Technician list error:",
+      error
+    );
+
+    return [];
+
+  }
+
+}
+
+
+async function renderSites(rows) {
+
+  const body =
+    document.getElementById(
+      "siteBody"
+    );
+
+  if (!body) return;
+
+
+  if (!rows.length) {
+
+    body.innerHTML =
+      '<tr><td colspan="3" class="loading">' +
+      "No sites found." +
+      "</td></tr>";
+
+    return;
+
+  }
+
+
+  const technicians =
+    await loadTechnicianNames();
+
+
+  const names =
+    technicians
+      .map(function(item) {
+
+        return String(
+          item.technician ||
+          item.name ||
+          ""
+        ).trim();
+
+      })
+      .filter(Boolean);
+
+
+  names.sort();
+
+
+  body.innerHTML =
+    rows.map(function(row) {
+
+      const site =
+        String(
+          row.sapId ||
+          row.site ||
+          ""
+        ).trim();
+
+
+      const current =
+        String(
+          row.technician ||
+          ""
+        ).trim();
+
+
+      let options =
+        '<option value="">-- Unassigned --</option>';
+
+
+      names.forEach(
+        function(name) {
+
+          options +=
+            '<option value="' +
+            escapeHtml(name) +
+            '"' +
+            (
+              name === current
+                ? " selected"
+                : ""
+            ) +
+            ">" +
+            escapeHtml(name) +
+            "</option>";
+
+        }
+      );
+
+
+      return (
+        "<tr>" +
+
+        "<td><strong>" +
+        escapeHtml(site) +
+        "</strong></td>" +
+
+        "<td>" +
+        escapeHtml(
+          row.siteType ||
+          ""
+        ) +
+        "</td>" +
+
+        "<td>" +
+
+        '<select ' +
+        'data-site="' +
+        escapeHtml(site) +
+        '" ' +
+        'onchange="markSiteChange(this)" ' +
+        'style="padding:8px;border:1px solid #cbd5e1;border-radius:7px;min-width:190px">' +
+
+        options +
+
+        "</select>" +
+
+        "</td>" +
+
+        "</tr>"
+      );
+
+    }).join("");
+
+}
+
+
+function markSiteChange(select) {
+
+  const site =
+    select.dataset.site;
+
+  siteChanges[site] =
+    select.value;
+
+}
+
+
+function filterSites() {
+
+  const q =
+    String(
+      document.getElementById(
+        "siteSearch"
+      )?.value || ""
+    )
+      .toLowerCase()
+      .trim();
+
+
+  const filtered =
+    siteRows.filter(
+      function(row) {
+
+        const text =
+          [
+            row.sapId,
+            row.siteType,
+            row.technician
+          ]
+            .join(" ")
+            .toLowerCase();
+
+
+        return (
+          !q ||
+          text.includes(q)
+        );
+
+      }
+    );
+
+
+  renderSites(filtered);
+
+}
+
+
+async function saveSiteChanges() {
+
+  const keys =
+    Object.keys(
+      siteChanges
+    );
+
+
+  if (!keys.length) {
+
+    alert(
+      "ℹ️ No site changes to save."
+    );
+
+    return;
+
+  }
+
+
+  let success = 0;
+  let failed = 0;
+
+
+  for (
+    let i = 0;
+    i < keys.length;
+    i++
+  ) {
+
+    const site =
+      keys[i];
+
+    const technician =
+      siteChanges[site];
+
+
+    if (!technician) {
+
+      failed++;
+
+      continue;
+
+    }
+
+
+    try {
+
+      await apiGet(
+        "updateSiteTechnician",
+        {
+          pin: "",
+          site: site,
+          technician: technician
+        }
+      );
+
+      success++;
+
+    } catch(error) {
+
+      console.error(
+        "Site update failed:",
+        error
+      );
+
+      failed++;
+
+    }
+
+  }
+
+
+  siteChanges = {};
+
+
+  alert(
+    "✅ Site changes saved: " +
+    success +
+    "\n❌ Failed: " +
+    failed
+  );
+
+
+  loadSites();
+
+}
+
+
+/* =====================================================
+   TECHNICIAN LINKS
+   ===================================================== */
+
+async function loadTechnicians() {
+
+  const body =
+    document.getElementById(
+      "techBody"
+    );
+
+  const head =
+    document.getElementById(
+      "techHead"
+    );
+
+  const loading =
+    document.getElementById(
+      "techLoading"
+    );
+
+
+  technicianChanges = {};
+
+
+  if (loading) {
+    loading.style.display =
+      "block";
+  }
+
+
+  if (body) {
+    body.innerHTML = "";
+  }
+
+
+  try {
+
+    const data =
+      await apiGet(
+        "technicians"
+      );
+
+
+    technicianRows =
+      Array.isArray(data)
+        ? data
+        : (
+            data &&
+            Array.isArray(data.rows)
+              ? data.rows
+              : []
+          );
+
+
+    if (head) {
+
+      head.innerHTML =
+        "<tr>" +
+
+        "<th>Technician Name</th>" +
+        "<th>Site Count</th>" +
+        "<th>Token</th>" +
+        "<th>Technician Link</th>" +
+
+        "</tr>";
+
+    }
+
+
+    renderTechnicians(
+      technicianRows
+    );
+
+
+  } catch(error) {
+
+    console.error(
+      "Technician loading error:",
+      error
+    );
+
+    if (body) {
+
+      body.innerHTML =
+        '<tr><td colspan="4" class="error">' +
+        escapeHtml(
+          error.message || error
+        ) +
+        "</td></tr>";
+
+    }
+
+  } finally {
+
+    if (loading) {
+      loading.style.display =
+        "none";
+    }
+
+  }
+
+}
+
+
+function renderTechnicians(rows) {
+
+  const body =
+    document.getElementById(
+      "techBody"
+    );
+
+  if (!body) return;
+
+
+  if (!rows.length) {
+
+    body.innerHTML =
+      '<tr><td colspan="4" class="loading">' +
+      "No technicians found." +
+      "</td></tr>";
+
+    return;
+
+  }
+
+
+  body.innerHTML =
+    rows.map(
+      function(row,index) {
+
+        const name =
+          String(
+            row.technician ||
+            row.name ||
+            ""
+          ).trim();
+
+
+        const siteCount =
+          row.siteCount ||
+          0;
+
+
+        const token =
+          String(
+            row.token ||
+            ""
+          );
+
+
+        const link =
+          String(
+            row.link ||
+            ""
+          );
+
+
+        return (
+
+          "<tr>" +
+
+          "<td>" +
+
+          '<input type="text" ' +
+          'value="' +
+          escapeHtml(name) +
+          '" ' +
+          'data-index="' +
+          index +
+          '" ' +
+          'onchange="markTechChange(this)" ' +
+          'style="padding:8px;border:1px solid #cbd5e1;border-radius:7px;min-width:180px">' +
+
+          "</td>" +
+
+          "<td>" +
+          escapeHtml(siteCount) +
+          "</td>" +
+
+          "<td>" +
+
+          '<div style="max-width:260px;word-break:break-all;font-size:11px;color:#64748b">' +
+          escapeHtml(token) +
+          "</div>" +
+
+          "</td>" +
+
+          "<td>" +
+
+          (
+            link
+              ? (
+                  '<div class="link-box">' +
+                  '<a href="' +
+                  escapeAttribute(link) +
+                  '" target="_blank">' +
+                  escapeHtml(link) +
+                  "</a>" +
+                  "</div>"
+                )
+              : "-"
+          ) +
+
+          "</td>" +
+
+          "</tr>"
+
+        );
+
+      }
+    ).join("");
+
+}
+
+
+function markTechChange(input) {
+
+  const index =
+    Number(
+      input.dataset.index
+    );
+
+  technicianChanges[index] =
+    input.value.trim();
+
+}
+
+
+function filterTechnicians() {
+
+  const q =
+    String(
+      document.getElementById(
+        "techSearch"
+      )?.value || ""
+    )
+      .toLowerCase()
+      .trim();
+
+
+  const filtered =
+    technicianRows.filter(
+      function(row) {
+
+        const text =
+          [
+            row.technician,
+            row.siteCount,
+            row.token,
+            row.link
+          ]
+            .join(" ")
+            .toLowerCase();
+
+
+        return (
+          !q ||
+          text.includes(q)
+        );
+
+      }
+    );
+
+
+  renderTechnicians(
+    filtered
+  );
+
+}
+
+
+async function saveTechnicianChanges() {
+
+  const keys =
+    Object.keys(
+      technicianChanges
+    );
+
+
+  if (!keys.length) {
+
+    alert(
+      "ℹ️ No technician changes to save."
+    );
+
+    return;
+
+  }
+
+
+  let success = 0;
+  let failed = 0;
+
+
+  for (
+    let i = 0;
+    i < keys.length;
+    i++
+  ) {
+
+    const index =
+      Number(keys[i]);
+
+
+    const row =
+      technicianRows[index];
+
+
+    if (!row) {
+
+      failed++;
+
+      continue;
+
+    }
+
+
+    const token =
+      String(
+        row.token ||
+        ""
+      );
+
+
+    const name =
+      String(
+        technicianChanges[index] ||
+        ""
+      ).trim();
+
+
+    if (!token || !name) {
+
+      failed++;
+
+      continue;
+
+    }
+
+
+    try {
+
+      await apiGet(
+        "updateTechnicianName",
+        {
+          token: token,
+          name: name
+        }
+      );
+
+      success++;
+
+    } catch(error) {
+
+      console.error(
+        "Technician update failed:",
+        error
+      );
+
+      failed++;
+
+    }
+
+  }
+
+
+  technicianChanges = {};
+
+
+  alert(
+    "✅ Technician changes saved: " +
+    success +
+    "\n❌ Failed: " +
+    failed
+  );
+
+
+  loadTechnicians();
+
+}
+
+
+/* =====================================================
+   ADD NEW TECHNICIAN
+   ===================================================== */
+
+async function addTechnician() {
+
+  const input =
+    document.getElementById(
+      "newTechnicianName"
+    );
+
+  const resultBox =
+    document.getElementById(
+      "newTechnicianResult"
+    );
+
+
+  const name =
+    String(
+      input?.value || ""
+    ).trim();
+
+
+  if (!name) {
+
+    alert(
+      "Please enter technician name."
+    );
+
+    return;
+
+  }
+
+
+  if (resultBox) {
+
+    resultBox.innerHTML =
+      '<div style="padding:12px;background:#eff6ff;color:#1d4ed8;border-radius:8px">' +
+      "⏳ Adding technician..." +
+      "</div>";
+
+  }
+
+
+  try {
+
+    const result =
+      await apiGet(
+        "addNewTechnician",
+        {
+          name: name
+        }
+      );
+
+
+    if (resultBox) {
+
+      resultBox.innerHTML =
+
+        '<div style="padding:14px;background:#dcfce7;color:#166534;border-radius:8px">' +
+
+        "<strong>✅ Technician added successfully.</strong><br><br>" +
+
+        "<b>Name:</b> " +
+        escapeHtml(
+          result.technicianName ||
+          name
+        ) +
+
+        "<br><b>Token:</b> " +
+        escapeHtml(
+          result.token ||
+          ""
+        ) +
+
+        "<br><br><b>Technician Link:</b><br>" +
+
+        '<a href="' +
+        escapeAttribute(
+          result.link ||
+          ""
+        ) +
+        '" target="_blank">' +
+
+        escapeHtml(
+          result.link ||
+          ""
+        ) +
+
+        "</a>" +
+
+        "</div>";
+
+    }
+
+
+    if (input) {
+      input.value = "";
+    }
+
+
+    loadTechnicians();
+    loadDashboard();
+
+
+  } catch(error) {
+
+    console.error(
+      "Add technician error:",
+      error
+    );
+
+
+    if (resultBox) {
+
+      resultBox.innerHTML =
+        '<div style="padding:14px;background:#fee2e2;color:#991b1b;border-radius:8px">' +
+        "❌ " +
+        escapeHtml(
+          error.message ||
+          error
+        ) +
+        "</div>";
+
+    }
+
+  }
+
+}
+
+
+/* =====================================================
+   DASHBOARD EXCEL
+   ===================================================== */
+
+async function downloadDashboardExcel() {
+
+  const btn =
+    document.getElementById(
+      "excelDashboardBtn"
+    );
+
+
+  if (btn) {
+
+    btn.disabled = true;
+
+    btn.innerText =
+      "⏳ Preparing...";
+
+  }
+
+
+  try {
+
+    const response =
+      await apiGet(
+        "dashboardExcel"
+      );
+
+
+    if (
+      !response ||
+      !response.base64
+    ) {
+
+      throw new Error(
+        "Excel file data not received."
+      );
+
+    }
+
+
+    const binary =
+      atob(
+        response.base64
+      );
+
+
+    const bytes =
+      new Uint8Array(
+        binary.length
+      );
+
+
+    for (
+      let i = 0;
+      i < binary.length;
+      i++
+    ) {
+
+      bytes[i] =
+        binary.charCodeAt(i);
+
+    }
+
+
+    const blob =
+      new Blob(
+        [bytes],
+        {
+          type:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        }
+      );
+
+
+    const url =
+      URL.createObjectURL(
+        blob
+      );
+
+
+    const a =
+      document.createElement(
+        "a"
+      );
+
+
+    a.href = url;
+
+    a.download =
+      "DG_Fault_Tracker_Admin_" +
+      new Date()
+        .toISOString()
+        .slice(0,10) +
+      ".xlsx";
+
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    document.body.removeChild(a);
+
+    URL.revokeObjectURL(url);
+
+
+  } catch(error) {
+
+    console.error(
+      "Excel error:",
+      error
+    );
+
+
+    alert(
+      "❌ Excel download failed.\n\n" +
+      (
+        error.message ||
+        error
+      )
+    );
+
+  } finally {
+
+    if (btn) {
+
+      btn.disabled = false;
+
+      btn.innerText =
+        "📥 Excel";
+
+    }
+
+  }
+
+}
+
+
+/* =====================================================
+   HELPER FUNCTIONS
+   ===================================================== */
+
+function setText(
+  id,
+  value
+) {
+
+  const element =
+    document.getElementById(id);
+
+  if (element) {
+    element.textContent =
+      value;
+  }
+
+}
+
+
+function escapeHtml(value) {
+
+  return String(
+    value === undefined ||
+    value === null
+      ? ""
+      : value
+  )
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+
+}
+
+
+function escapeAttribute(value) {
+
+  return String(
+    value === undefined ||
+    value === null
+      ? ""
+      : value
+  )
+    .replace(/&/g,"&amp;")
+    .replace(/"/g,"&quot;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;");
+
+}
+
+
+/* =====================================================
+   INITIAL LOAD
+   ===================================================== */
+
+window.addEventListener(
+  "load",
+  function() {
+
+    loadDashboard();
+
+  }
+);
