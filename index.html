@@ -603,12 +603,24 @@ tr:hover td{
       📊 Dashboard
     </div>
 
-    <button
-      class="action"
-      onclick="loadDashboard()"
-    >
-      🔄 Refresh
-    </button>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end">
+
+  <button
+    class="action"
+    onclick="loadDashboard()"
+  >
+    🔄 Refresh
+  </button>
+
+  <button
+    id="excelDashboardBtn"
+    class="action excel-btn"
+    onclick="downloadDashboardExcel()"
+  >
+    📥 Excel
+  </button>
+
+</div>
 
   </div>
 
