@@ -562,121 +562,110 @@ function populateFaultTechnicianFilter() {
 
 
 function renderFaults(rows) {
-
-  const body =
-    document.getElementById(
-      "faultBody"
-    );
+  const body = document.getElementById("faultBody");
 
   if (!body) return;
 
-
   if (!rows.length) {
-
     body.innerHTML =
-      '<tr><td colspan="10" class="loading">' +
-      "No fault records found." +
-      "</td></tr>";
-
+      '<tr><td colspan="10" style="text-align:center;padding:20px;color:#64748b;">No fault records found.</td></tr>';
     return;
-
   }
 
+  body.innerHTML = rows.map(function(row) {
 
-  body.innerHTML =
-    rows.map(function(row) {
+    const status = String(row.status || "Open").trim();
+    const rowNumber = Number(row.rowNumber || 0);
 
-      const status =
-        String(
-          row.status ||
-          "Open"
-        ).trim();
+    return (
+      "<tr>" +
 
+      "<td>" + escapeHtml(row.entryDate || "") + "</td>" +
+      "<td>" + escapeHtml(row.technician || "") + "</td>" +
+      "<td>" + escapeHtml(row.site || "") + "</td>" +
+      "<td>" + escapeHtml(row.dgMake || "") + "</td>" +
+      "<td>" + escapeHtml(row.dgKva || "") + "</td>" +
+      "<td>" + escapeHtml(row.fault || "") + "</td>" +
+      "<td>" + escapeHtml(row.remark || "") + "</td>" +
+      "<td>" + escapeHtml(row.docket || "") + "</td>" +
+      "<td>" + escapeHtml(row.faultDate || "") + "</td>" +
 
-      return (
-        "<tr>" +
+      "<td>" +
+        '<div style="display:flex;align-items:center;gap:6px;white-space:nowrap;">' +
 
-        "<td>" +
-        escapeHtml(row.entryDate) +
-        "</td>" +
+          '<select class="status ' + getFaultStatusClass(status) + '" ' +
+          'data-row="' + rowNumber + '" ' +
+          'data-old-value="' + escapeHtml(status) + '" ' +
+          'onchange="markFaultStatusChange(this)">' +
 
-        "<td>" +
-        escapeHtml(row.technician) +
-        "</td>" +
+            statusOption("Open", status) +
+            statusOption("In Progress", status) +
+            statusOption("Closed", status) +
+            statusOption("Waiting for Material", status) +
+            statusOption("Waiting for Vendor", status) +
 
-        "<td><strong>" +
-        escapeHtml(row.site) +
-        "</strong></td>" +
+          "</select>" +
 
-        "<td>" +
-        escapeHtml(row.dgMake) +
-        "</td>" +
+          '<button type="button" ' +
+          'class="btn btn-green fault-save-btn" ' +
+          'data-row="' + rowNumber + '" ' +
+          'onclick="saveFaultStatus(this)" ' +
+          'disabled ' +
+          'style="padding:6px 9px;font-size:11px;">' +
+          "💾 Save" +
+          "</button>" +
 
-        "<td>" +
-        escapeHtml(row.dgKva) +
-        "</td>" +
+        "</div>" +
+      "</td>" +
 
-        "<td>" +
-        escapeHtml(row.fault) +
-        "</td>" +
+      "</tr>"
+    );
 
-        "<td>" +
-        escapeHtml(row.remark) +
-        "</td>" +
-
-        "<td>" +
-        escapeHtml(row.docket) +
-        "</td>" +
-
-        "<td>" +
-        escapeHtml(row.faultDate) +
-        "</td>" +
-
-        "<td>" +
-
-        '<select class="status" ' +
-        'data-row="' +
-        Number(row.rowNumber || 0) +
-        '" ' +
-        'onchange="updateFaultStatus(this)">' +
-
-        statusOption(
-          "Open",
-          status
-        ) +
-
-        statusOption(
-          "In Progress",
-          status
-        ) +
-
-        statusOption(
-          "Closed",
-          status
-        ) +
-
-        statusOption(
-          "Waiting for Material",
-          status
-        ) +
-
-        statusOption(
-          "Waiting for Vendor",
-          status
-        ) +
-
-        "</select>" +
-
-        "</td>" +
-
-        "</tr>"
-      );
-
-    }).join("");
-
+  }).join("");
 }
+function markFaultStatusChange(select) {
 
+  const oldValue = select.dataset.oldValue || "";
 
+  const saveButton =
+    select.parentElement.querySelector(".fault-save-btn");
+
+  if (!saveButton) return;
+
+  if (select.value === oldValue) {
+    saveButton.disabled = true;
+  } else {
+    saveButton.disabled = false;
+  }
+}
+function getFaultStatusClass(status) {
+
+  const value = String(status || "")
+    .trim()
+    .toLowerCase();
+
+  if (value === "open") {
+    return "status-open";
+  }
+
+  if (value === "in progress") {
+    return "status-progress";
+  }
+
+  if (value === "closed") {
+    return "status-closed";
+  }
+
+  if (value === "waiting for material") {
+    return "status-material";
+  }
+
+  if (value === "waiting for vendor") {
+    return "status-vendor";
+  }
+
+  return "";
+}
 function statusOption(
   value,
   current
@@ -785,93 +774,68 @@ function filterFaults() {
 
 }
 
+async function saveFaultStatus(button) {
 
-async function updateFaultStatus(select) {
+  const row = Number(button.dataset.row);
 
-  const row =
-    Number(
-      select.dataset.row
-    );
+  const select =
+    button.parentElement.querySelector(".status");
 
-  const value =
-    select.value;
-
-
-  if (!row) {
-
-    alert(
-      "❌ Fault row number missing."
-    );
-
+  if (!row || !select) {
+    alert("❌ Fault row number missing.");
     return;
-
   }
 
+  const value = select.value;
+  const oldValue = select.dataset.oldValue || "";
 
-  const oldValue =
-    select.dataset.oldValue ||
-    "";
+  if (value === oldValue) {
+    button.disabled = true;
+    return;
+  }
 
-
-  select.dataset.oldValue =
-    value;
-
+  button.disabled = true;
+  button.innerText = "Saving...";
 
   try {
 
-    await apiGet(
-      "updateFaultStatus",
-      {
-        row: row,
-        value: value
-      }
-    );
+    await apiGet("updateFaultStatus", {
+      row: row,
+      value: value
+    });
 
-
-    const found =
-      faultRows.find(
-        function(item) {
-
-          return Number(
-            item.rowNumber
-          ) === row;
-
-        }
-      );
-
+    const found = faultRows.find(function(item) {
+      return Number(item.rowNumber) === row;
+    });
 
     if (found) {
       found.status = value;
     }
 
+    select.dataset.oldValue = value;
 
-    alert(
-      "✅ Fault status updated."
-    );
-
+    button.innerText = "✅ Saved";
 
     loadDashboard();
 
+    setTimeout(function() {
+      button.innerText = "💾 Save";
+      button.disabled = true;
+    }, 1500);
 
-  } catch(error) {
+  } catch (error) {
 
     alert(
       "❌ Status update failed.\n\n" +
-      (
-        error.message ||
-        error
-      )
+      (error.message || error)
     );
 
+    select.value = oldValue;
 
-    if (oldValue) {
-      select.value = oldValue;
-    }
-
+    button.innerText = "💾 Save";
+    button.disabled = true;
   }
-
 }
-
 
 /* =====================================================
    SITE MASTER
