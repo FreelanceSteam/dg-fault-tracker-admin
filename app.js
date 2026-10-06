@@ -20,7 +20,6 @@ let technicianChanges = {};
 
 // ===== LOAD CACHE =====
 let dashboardLoaded = false;
-let faultsLoaded = false;
 let sitesLoaded = false;
 let techniciansLoaded = false;
 let technicianNamesLoaded = false;
