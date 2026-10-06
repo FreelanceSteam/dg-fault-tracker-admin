@@ -2009,98 +2009,377 @@ window.addEventListener(
 
 function downloadTableExcel(tableId, fileName) {
 
-  const table = document.getElementById(tableId);
+    const table = document.getElementById(tableId);
 
-  if (!table) {
-    alert("❌ Data table not found.");
-    return;
-  }
+    if (!table) {
+        alert("❌ Data table not found.");
+        return;
+    }
 
-  if (typeof XLSX === "undefined") {
-    alert("❌ Excel library is not loaded. Please refresh the page.");
-    return;
-  }
+    if (typeof XLSX === "undefined") {
+        alert("❌ Excel library is not loaded. Please refresh the page.");
+        return;
+    }
 
-  try {
+    try {
 
-    const clone = table.cloneNode(true);
+        /* =========================================
+           CLONE TABLE
+        ========================================= */
 
-    // Convert SELECT to selected text
-    clone.querySelectorAll("select").forEach(function(select) {
+        const clone = table.cloneNode(true);
 
-      const selectedText =
-        select.options[select.selectedIndex]
-          ? select.options[select.selectedIndex].text
-          : "";
 
-      const cell = select.parentElement;
+        /* =========================================
+           CONVERT SELECT / INPUT TO TEXT
+        ========================================= */
 
-      if (cell) {
-        cell.textContent = selectedText;
-      }
+        clone.querySelectorAll("select").forEach(function(select) {
 
-    });
+            const selectedText =
+                select.options[select.selectedIndex]
+                    ? select.options[select.selectedIndex].text
+                    : "";
 
-    // Convert INPUT to current value
-    clone.querySelectorAll("input").forEach(function(input) {
+            const cell = select.parentElement;
 
-      const cell = input.parentElement;
+            if (cell) {
+                cell.textContent = selectedText;
+            }
 
-      if (cell) {
-        cell.textContent = input.value || "";
-      }
+        });
 
-    });
 
-    // Remove buttons
-    clone.querySelectorAll("button").forEach(function(button) {
-      button.remove();
-    });
+        clone.querySelectorAll("input").forEach(function(input) {
 
-    // Create real Excel workbook
-    const workbook = XLSX.utils.book_new();
+            const cell = input.parentElement;
 
-    const worksheet =
-      XLSX.utils.table_to_sheet(
-        clone,
-        {
-          raw: false
+            if (cell) {
+                cell.textContent = input.value || "";
+            }
+
+        });
+
+
+        /* =========================================
+           REMOVE BUTTONS / ACTION COLUMNS
+        ========================================= */
+
+        clone.querySelectorAll("button").forEach(function(button) {
+            button.remove();
+        });
+
+
+        /* =========================================
+           READ TABLE INTO ARRAY
+           Everything is kept as TEXT
+           This prevents:
+           - Docket scientific notation
+           - Date ####
+           ========================================= */
+
+        const data = [];
+
+        clone.querySelectorAll("tr").forEach(function(row) {
+
+            const rowData = [];
+
+            row.querySelectorAll("th, td").forEach(function(cell) {
+
+                let value = (cell.textContent || "")
+                    .replace(/\s+/g, " ")
+                    .trim();
+
+                rowData.push(value);
+
+            });
+
+            if (rowData.length) {
+                data.push(rowData);
+            }
+
+        });
+
+
+        if (!data.length) {
+            alert("❌ No data available for Excel export.");
+            return;
         }
-      );
 
-    XLSX.utils.book_append_sheet(
-      workbook,
-      worksheet,
-      "Data"
-    );
 
-    // Force .xlsx extension
-    let finalFileName = fileName || "DG_Fault_Tracker.xlsx";
+        /* =========================================
+           CREATE REAL XLSX WORKBOOK
+        ========================================= */
 
-    finalFileName =
-      finalFileName
-        .replace(/\.xls$/i, "")
-        .replace(/\.xlsx$/i, "")
-        + ".xlsx";
+        const workbook = XLSX.utils.book_new();
 
-    // Download REAL XLSX
-    XLSX.writeFile(
-      workbook,
-      finalFileName
-    );
+        const worksheet = XLSX.utils.aoa_to_sheet(data);
 
-  } catch (error) {
 
-    console.error(
-      "Excel Export Error:",
-      error
-    );
+        /* =========================================
+           PROFESSIONAL COLUMN WIDTHS
+        ========================================= */
 
-    alert(
-      "❌ Excel download failed.\n\n" +
-      error.message
-    );
+        const headers = data[0].map(function(header) {
+            return String(header || "")
+                .trim()
+                .toLowerCase();
+        });
 
-  }
+
+        worksheet["!cols"] = headers.map(function(header) {
+
+            if (
+                header.includes("entry") ||
+                header.includes("date") ||
+                header.includes("time")
+            ) {
+                return { wch: 20 };
+            }
+
+            if (
+                header.includes("technician") ||
+                header.includes("technician name")
+            ) {
+                return { wch: 24 };
+            }
+
+            if (
+                header.includes("site")
+            ) {
+                return { wch: 18 };
+            }
+
+            if (
+                header.includes("dg make") ||
+                header.includes("make")
+            ) {
+                return { wch: 18 };
+            }
+
+            if (
+                header.includes("kva")
+            ) {
+                return { wch: 12 };
+            }
+
+            if (
+                header.includes("fault")
+            ) {
+                return { wch: 28 };
+            }
+
+            if (
+                header.includes("remark")
+            ) {
+                return { wch: 50 };
+            }
+
+            if (
+                header.includes("docket")
+            ) {
+                return { wch: 20 };
+            }
+
+            if (
+                header.includes("status")
+            ) {
+                return { wch: 15 };
+            }
+
+            return { wch: 18 };
+
+        });
+
+
+        /* =========================================
+           FORCE ALL DOCKET CELLS TO TEXT
+           Prevent 2.61E+10 type display
+        ========================================= */
+
+        const docketColumnIndex = headers.findIndex(function(header) {
+            return header.includes("docket");
+        });
+
+
+        if (docketColumnIndex >= 0) {
+
+            for (let r = 1; r < data.length; r++) {
+
+                const cellAddress =
+                    XLSX.utils.encode_cell({
+                        r: r,
+                        c: docketColumnIndex
+                    });
+
+                if (worksheet[cellAddress]) {
+
+                    worksheet[cellAddress].t = "s";
+
+                    worksheet[cellAddress].v =
+                        String(data[r][docketColumnIndex] || "");
+
+                }
+
+            }
+
+        }
+
+
+        /* =========================================
+           FORCE DATE / TIME COLUMNS TO TEXT
+           Prevent ######## display
+        ========================================= */
+
+        headers.forEach(function(header, columnIndex) {
+
+            const isDateColumn =
+                header.includes("date") ||
+                header.includes("time") ||
+                header.includes("entry");
+
+            if (!isDateColumn) {
+                return;
+            }
+
+            for (let r = 1; r < data.length; r++) {
+
+                const cellAddress =
+                    XLSX.utils.encode_cell({
+                        r: r,
+                        c: columnIndex
+                    });
+
+                if (worksheet[cellAddress]) {
+
+                    worksheet[cellAddress].t = "s";
+
+                    worksheet[cellAddress].v =
+                        String(data[r][columnIndex] || "");
+
+                }
+
+            }
+
+        });
+
+
+        /* =========================================
+           WRAP LONG TEXT
+           Remarks / Fault columns
+        ========================================= */
+
+        headers.forEach(function(header, columnIndex) {
+
+            if (
+                header.includes("remark") ||
+                header.includes("fault")
+            ) {
+
+                for (let r = 0; r < data.length; r++) {
+
+                    const cellAddress =
+                        XLSX.utils.encode_cell({
+                            r: r,
+                            c: columnIndex
+                        });
+
+                    if (worksheet[cellAddress]) {
+
+                        worksheet[cellAddress].s = {
+                            alignment: {
+                                wrapText: true,
+                                vertical: "top"
+                            }
+                        };
+
+                    }
+
+                }
+
+            }
+
+        });
+
+
+        /* =========================================
+           AUTO FILTER
+        ========================================= */
+
+        worksheet["!autofilter"] = {
+            ref: XLSX.utils.encode_range({
+                s: { r: 0, c: 0 },
+                e: {
+                    r: data.length - 1,
+                    c: data[0].length - 1
+                }
+            })
+        };
+
+
+        /* =========================================
+           FREEZE HEADER ROW
+        ========================================= */
+
+        worksheet["!freeze"] = {
+            xSplit: 0,
+            ySplit: 1
+        };
+
+
+        /* =========================================
+           ADD SHEET
+        ========================================= */
+
+        XLSX.utils.book_append_sheet(
+            workbook,
+            worksheet,
+            "Fault Tracker"
+        );
+
+
+        /* =========================================
+           FORCE XLSX EXTENSION
+        ========================================= */
+
+        let finalFileName =
+            fileName || "DG_Fault_Tracker.xlsx";
+
+        finalFileName =
+            finalFileName
+                .replace(/\.xls$/i, "")
+                .replace(/\.xlsx$/i, "")
+                + ".xlsx";
+
+
+        /* =========================================
+           DOWNLOAD REAL XLSX
+        ========================================= */
+
+        XLSX.writeFile(
+            workbook,
+            finalFileName,
+            {
+                bookType: "xlsx",
+                compression: true
+            }
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Excel Export Error:",
+            error
+        );
+
+        alert(
+            "❌ Excel download failed.\n\n" +
+            error.message
+        );
+
+    }
 
 }
+
+
+
