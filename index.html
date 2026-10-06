@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
 
 <title>DG Fault Tracker - Admin</title>
 
@@ -437,6 +441,7 @@ tr:hover td{
   .form-grid{
     grid-template-columns:1fr 1fr;
   }
+
 }
 
 @media(max-width:650px){
@@ -486,9 +491,11 @@ tr:hover td{
   .search{
     max-width:none;
   }
+
 }
 
 </style>
+
 </head>
 
 <body>
@@ -498,8 +505,11 @@ tr:hover td{
 <header class="header">
 
   <div class="header-left">
+
     <h1>⚡ DG Fault Tracker</h1>
+
     <p>Admin Control Center</p>
+
   </div>
 
   <div class="header-badge">
@@ -507,6 +517,7 @@ tr:hover td{
   </div>
 
 </header>
+
 
 <!-- ================= TABS ================= -->
 
@@ -534,7 +545,9 @@ tr:hover td{
 
 </nav>
 
+
 <main class="container">
+
 
 <!-- =====================================================
      DASHBOARD
@@ -561,15 +574,18 @@ tr:hover td{
 
   </div>
 
+
   <div id="dashboardLoading"
        class="loading">
     Loading dashboard...
   </div>
 
+
   <div id="dashboardError"
        class="error"
        style="display:none">
   </div>
+
 
   <div id="dashboardContent">
 
@@ -616,6 +632,7 @@ tr:hover td{
       </div>
 
     </div>
+
 
     <div class="card">
 
@@ -672,6 +689,7 @@ tr:hover td{
              placeholder="Search site / technician / fault / docket..."
              oninput="filterFaults()">
 
+
       <select id="faultTechnicianFilter"
               onchange="filterFaults()"
               style="padding:10px;border:1px solid #cbd5e1;border-radius:8px">
@@ -680,34 +698,53 @@ tr:hover td{
 
       </select>
 
+
       <select id="faultStatusFilter"
               onchange="filterFaults()"
               style="padding:10px;border:1px solid #cbd5e1;border-radius:8px">
 
         <option value="">All Status</option>
+
         <option value="Open">Open</option>
+
         <option value="In Progress">In Progress</option>
+
         <option value="Closed">Closed</option>
-        <option value="Waiting for Material">Waiting for Material</option>
-        <option value="Waiting for Vendor">Waiting for Vendor</option>
+
+        <option value="Waiting for Material">
+          Waiting for Material
+        </option>
+
+        <option value="Waiting for Vendor">
+          Waiting for Vendor
+        </option>
 
       </select>
+
 
       <button class="btn btn-blue"
               onclick="loadFaults()">
         🔄 Refresh
       </button>
 
+
+      <button class="btn btn-green"
+              onclick="downloadTableExcel('faultTable','DG_Fault_Tracker.xls')">
+        📥 Excel
+      </button>
+
     </div>
+
 
     <div id="faultLoading"
          class="loading">
       Loading faults...
     </div>
 
+
     <div class="table-wrap">
 
-      <table>
+      <table id="faultTable">
 
         <thead id="faultHead"></thead>
 
@@ -742,26 +779,36 @@ tr:hover td{
              placeholder="Search SAP ID / technician..."
              oninput="filterSites()">
 
+
       <button class="btn btn-blue"
               onclick="loadSites()">
         🔄 Refresh
       </button>
+
 
       <button class="btn btn-green"
               onclick="saveSiteChanges()">
         💾 Save Site Changes
       </button>
 
+
+      <button class="btn btn-green"
+              onclick="downloadTableExcel('siteTable','Site_Master.xls')">
+        📥 Excel
+      </button>
+
     </div>
+
 
     <div id="siteLoading"
          class="loading">
       Loading Site Master...
     </div>
 
+
     <div class="table-wrap">
 
-      <table>
+      <table id="siteTable">
 
         <thead id="siteHead"></thead>
 
@@ -796,26 +843,36 @@ tr:hover td{
              placeholder="Search technician / token..."
              oninput="filterTechnicians()">
 
+
       <button class="btn btn-blue"
               onclick="loadTechnicians()">
         🔄 Refresh
       </button>
+
 
       <button class="btn btn-green"
               onclick="saveTechnicianChanges()">
         💾 Save Technician Changes
       </button>
 
+
+      <button class="btn btn-green"
+              onclick="downloadTableExcel('technicianTable','Technician_Links.xls')">
+        📥 Excel
+      </button>
+
     </div>
+
 
     <div id="techLoading"
          class="loading">
       Loading Technician Links...
     </div>
 
+
     <div class="table-wrap">
 
-      <table>
+      <table id="technicianTable">
 
         <thead id="techHead"></thead>
 
@@ -838,6 +895,7 @@ tr:hover td{
       Add a new technician and automatically generate his technician link.
     </p>
 
+
     <div class="form-grid">
 
       <div class="form-group">
@@ -854,10 +912,12 @@ tr:hover td{
 
     <br>
 
+
     <button class="btn btn-blue"
             onclick="addTechnician()">
       ＋ Add Technician
     </button>
+
 
     <div id="newTechnicianResult"
          style="margin-top:15px">
@@ -867,9 +927,12 @@ tr:hover td{
 
 </section>
 
+
 </main>
+
 
 <script src="app.js"></script>
 
 </body>
+
 </html>
