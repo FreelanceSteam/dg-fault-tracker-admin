@@ -2003,7 +2003,7 @@ window.addEventListener(
   }
 );
 /* =====================================================
-   TABLE EXCEL DOWNLOAD
+   REAL XLSX TABLE DOWNLOAD
    ===================================================== */
 
 function downloadTableExcel(tableId, fileName) {
@@ -2015,77 +2015,91 @@ function downloadTableExcel(tableId, fileName) {
     return;
   }
 
-  // Clone table so original screen is not affected
-  const clone = table.cloneNode(true);
+  if (typeof XLSX === "undefined") {
+    alert("❌ Excel library is not loaded. Please refresh the page.");
+    return;
+  }
 
-  // Convert SELECT controls to selected text
-  clone.querySelectorAll("select").forEach(function(select) {
+  try {
 
-    const selectedText =
-      select.options[select.selectedIndex]
-        ? select.options[select.selectedIndex].text
-        : "";
+    const clone = table.cloneNode(true);
 
-    const cell = select.parentElement;
+    // Convert SELECT to selected text
+    clone.querySelectorAll("select").forEach(function(select) {
 
-    if (cell) {
-      cell.textContent = selectedText;
-    }
-  });
+      const selectedText =
+        select.options[select.selectedIndex]
+          ? select.options[select.selectedIndex].text
+          : "";
 
-  // Convert INPUT controls to their current values
-  clone.querySelectorAll("input").forEach(function(input) {
+      const cell = select.parentElement;
 
-    const value = input.value || "";
+      if (cell) {
+        cell.textContent = selectedText;
+      }
 
-    const cell = input.parentElement;
+    });
 
-    if (cell) {
-      cell.textContent = value;
-    }
-  });
+    // Convert INPUT to current value
+    clone.querySelectorAll("input").forEach(function(input) {
 
-  // Remove buttons/actions from exported table
-  clone.querySelectorAll("button").forEach(function(button) {
-    button.remove();
-  });
+      const cell = input.parentElement;
 
-  const html =
-    '<html>' +
-    '<head>' +
-    '<meta charset="UTF-8">' +
-    '<style>' +
-    'table{border-collapse:collapse;width:100%;}' +
-    'th,td{border:1px solid #999;padding:6px;text-align:left;}' +
-    'th{background:#0f172a;color:white;}' +
-    '</style>' +
-    '</head>' +
-    '<body>' +
-    clone.outerHTML +
-    '</body>' +
-    '</html>';
+      if (cell) {
+        cell.textContent = input.value || "";
+      }
 
-  const blob = new Blob(
-    [html],
-    {
-      type: "application/vnd.ms-excel"
-    }
-  );
+    });
 
-  const url = URL.createObjectURL(blob);
+    // Remove buttons
+    clone.querySelectorAll("button").forEach(function(button) {
+      button.remove();
+    });
 
-  const link = document.createElement("a");
+    // Create real Excel workbook
+    const workbook = XLSX.utils.book_new();
 
-  link.href = url;
-  link.download = fileName;
+    const worksheet =
+      XLSX.utils.table_to_sheet(
+        clone,
+        {
+          raw: false
+        }
+      );
 
-  document.body.appendChild(link);
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      "Data"
+    );
 
-  link.click();
+    // Force .xlsx extension
+    let finalFileName = fileName || "DG_Fault_Tracker.xlsx";
 
-  document.body.removeChild(link);
+    finalFileName =
+      finalFileName
+        .replace(/\.xls$/i, "")
+        .replace(/\.xlsx$/i, "")
+        + ".xlsx";
 
-  setTimeout(function() {
-    URL.revokeObjectURL(url);
-  }, 1000);
+    // Download REAL XLSX
+    XLSX.writeFile(
+      workbook,
+      finalFileName
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Excel Export Error:",
+      error
+    );
+
+    alert(
+      "❌ Excel download failed.\n\n" +
+      error.message
+    );
+
+  }
+
 }
