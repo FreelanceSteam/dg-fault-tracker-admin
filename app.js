@@ -1018,7 +1018,23 @@ async function renderSites(rows) {
 
 
   names.sort();
+// SITE MASTER SUMMARY COUNTS
 
+const siteTotalCount =
+  document.getElementById("siteTotalCount");
+
+const siteTechnicianCount =
+  document.getElementById("siteTechnicianCount");
+
+if (siteTotalCount) {
+  siteTotalCount.innerText =
+    rows.length;
+}
+
+if (siteTechnicianCount) {
+  siteTechnicianCount.innerText =
+    new Set(names).size;
+}
 
   body.innerHTML =
     rows.map(function(row) {
@@ -1065,16 +1081,24 @@ async function renderSites(rows) {
       return (
         "<tr>" +
 
-        "<td><strong>" +
-        escapeHtml(site) +
-        "</strong></td>" +
+        "<td><strong class=\"site-id\">" +
+escapeHtml(site) +
+"</strong></td>" +
 
         "<td>" +
-        escapeHtml(
-          row.siteType ||
-          ""
-        ) +
-        "</td>" +
+"<span class=\"site-type-badge site-type-" +
+String(
+  row.siteType || ""
+)
+  .toLowerCase()
+  .replace(/\s+/g, "-") +
+"\">" +
+escapeHtml(
+  row.siteType ||
+  ""
+) +
+"</span>" +
+"</td>" +
 
         "<td>" +
 
