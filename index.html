@@ -493,7 +493,172 @@ tr:hover td{
   }
 
 }
+/* ================= SITE MASTER COLOR UI ================= */
 
+.site-master-card{
+  background:linear-gradient(135deg,#eff6ff,#ffffff);
+  border:1px solid #dbeafe;
+}
+
+.site-master-title{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  margin-bottom:16px;
+  padding:18px;
+  border-radius:14px;
+  background:linear-gradient(135deg,#dbeafe,#eff6ff);
+  border:1px solid #bfdbfe;
+}
+
+.site-master-title-left{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.site-master-icon{
+  width:48px;
+  height:48px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:12px;
+  background:#2563eb;
+  color:white;
+  font-size:24px;
+  box-shadow:0 5px 12px rgba(37,99,235,.25);
+}
+
+.site-master-title h2{
+  margin:0;
+  color:#0f172a;
+  font-size:24px;
+}
+
+.site-master-title p{
+  margin:4px 0 0;
+  color:#64748b;
+  font-size:13px;
+}
+
+.site-master-stats{
+  display:flex;
+  gap:10px;
+}
+
+.site-master-stat{
+  min-width:120px;
+  padding:12px 16px;
+  background:white;
+  border-radius:10px;
+  border:1px solid #dbeafe;
+  text-align:center;
+}
+
+.site-master-stat-label{
+  display:block;
+  font-size:11px;
+  color:#64748b;
+  font-weight:bold;
+}
+
+.site-master-stat-value{
+  display:block;
+  margin-top:3px;
+  font-size:22px;
+  font-weight:bold;
+  color:#2563eb;
+}
+
+.site-master-table th{
+  background:linear-gradient(135deg,#1d4ed8,#2563eb);
+}
+
+.site-master-table tbody tr:nth-child(even) td{
+  background:#f0fdf4;
+}
+
+.site-master-table tbody tr:hover td{
+  background:#dbeafe !important;
+}
+
+.site-id{
+  color:#0f172a;
+  font-weight:bold;
+  font-size:14px;
+}
+
+.site-type-badge{
+  display:inline-block;
+  padding:6px 12px;
+  border-radius:8px;
+  font-weight:bold;
+  font-size:12px;
+}
+
+.site-type-css{
+  background:#dbeafe;
+  color:#1d4ed8;
+}
+
+.site-type-indoor{
+  background:#ffedd5;
+  color:#c2410c;
+}
+
+.site-type-outdoor{
+  background:#ede9fe;
+  color:#6d28d9;
+}
+
+.site-type-shared{
+  background:#d1fae5;
+  color:#047857;
+}
+
+.site-tech-select{
+  padding:9px 12px;
+  border:1px solid #cbd5e1;
+  border-radius:8px;
+  min-width:220px;
+  background:white;
+  font-weight:600;
+  color:#1e293b;
+  cursor:pointer;
+}
+
+.site-tech-select:focus{
+  border-color:#2563eb;
+  box-shadow:0 0 0 3px rgba(37,99,235,.12);
+}
+
+.site-tech-select.site-changed{
+  background:#fff7ed;
+  border-color:#f97316;
+}
+
+@media(max-width:650px){
+
+  .site-master-title{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .site-master-stats{
+    width:100%;
+  }
+
+  .site-master-stat{
+    flex:1;
+  }
+
+  .site-master-title h2{
+    font-size:20px;
+  }
+
+}
 </style>
 
 </head>
@@ -765,11 +930,46 @@ tr:hover td{
 
 <section id="sites" class="section">
 
-  <div class="section-title">
-    🏢 Site Master
+  <div class="site-master-title">
+
+  <div class="site-master-title-left">
+
+    <div class="site-master-icon">
+      🏢
+    </div>
+
+    <div>
+      <h2>Site Master</h2>
+      <p>Manage sites and assign technicians</p>
+    </div>
+
   </div>
 
-  <div class="card">
+  <div class="site-master-stats">
+
+    <div class="site-master-stat">
+      <span class="site-master-stat-label">
+        Total Sites
+      </span>
+      <span class="site-master-stat-value" id="siteTotalCount">
+        —
+      </span>
+    </div>
+
+    <div class="site-master-stat">
+      <span class="site-master-stat-label">
+        Total Technicians
+      </span>
+      <span class="site-master-stat-value" id="siteTechnicianCount">
+        —
+      </span>
+    </div>
+
+  </div>
+
+</div>
+
+  <div class="card site-master-card">
 
     <div class="toolbar">
 
@@ -808,7 +1008,7 @@ tr:hover td{
 
     <div class="table-wrap">
 
-      <table id="siteTable">
+    <table id="siteTable" class="site-master-table">
 
         <thead id="siteHead"></thead>
 
