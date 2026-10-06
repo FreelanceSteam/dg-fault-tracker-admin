@@ -2045,3 +2045,90 @@ function downloadTableExcel(tableId, fileName) {
 
   URL.revokeObjectURL(url);
 }
+/* =====================================================
+   TABLE EXCEL DOWNLOAD
+   ===================================================== */
+
+function downloadTableExcel(tableId, fileName) {
+
+  const table = document.getElementById(tableId);
+
+  if (!table) {
+    alert("❌ Data table not found.");
+    return;
+  }
+
+  // Clone table so original screen is not affected
+  const clone = table.cloneNode(true);
+
+  // Convert SELECT controls to selected text
+  clone.querySelectorAll("select").forEach(function(select) {
+
+    const selectedText =
+      select.options[select.selectedIndex]
+        ? select.options[select.selectedIndex].text
+        : "";
+
+    const cell = select.parentElement;
+
+    if (cell) {
+      cell.textContent = selectedText;
+    }
+  });
+
+  // Convert INPUT controls to their current values
+  clone.querySelectorAll("input").forEach(function(input) {
+
+    const value = input.value || "";
+
+    const cell = input.parentElement;
+
+    if (cell) {
+      cell.textContent = value;
+    }
+  });
+
+  // Remove buttons/actions from exported table
+  clone.querySelectorAll("button").forEach(function(button) {
+    button.remove();
+  });
+
+  const html =
+    '<html>' +
+    '<head>' +
+    '<meta charset="UTF-8">' +
+    '<style>' +
+    'table{border-collapse:collapse;width:100%;}' +
+    'th,td{border:1px solid #999;padding:6px;text-align:left;}' +
+    'th{background:#0f172a;color:white;}' +
+    '</style>' +
+    '</head>' +
+    '<body>' +
+    clone.outerHTML +
+    '</body>' +
+    '</html>';
+
+  const blob = new Blob(
+    [html],
+    {
+      type: "application/vnd.ms-excel"
+    }
+  );
+
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = fileName;
+
+  document.body.appendChild(link);
+
+  link.click();
+
+  document.body.removeChild(link);
+
+  setTimeout(function() {
+    URL.revokeObjectURL(url);
+  }, 1000);
+}
