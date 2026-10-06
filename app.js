@@ -25,6 +25,7 @@ let sitesLoaded = false;
 let techniciansLoaded = false;
 let technicianNamesLoaded = false;
 let dashboardLoadingPromise = null;
+let faultsLoaded = false;
 let faultsLoadingPromise = null;
 let sitesLoadingPromise = null;
 let techniciansLoadingPromise = null;
