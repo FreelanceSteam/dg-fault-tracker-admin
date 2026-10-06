@@ -2002,3 +2002,46 @@ window.addEventListener(
 
   }
 );
+/* =====================================================
+   TABLE EXCEL DOWNLOAD
+   ===================================================== */
+
+function downloadTableExcel(tableId, fileName) {
+
+  const table = document.getElementById(tableId);
+
+  if (!table) {
+    alert("❌ Data table not found.");
+    return;
+  }
+
+  const html =
+    '<html>' +
+    '<head>' +
+    '<meta charset="UTF-8">' +
+    '</head>' +
+    '<body>' +
+    table.outerHTML +
+    '</body>' +
+    '</html>';
+
+  const blob = new Blob(
+    [html],
+    {
+      type: "application/vnd.ms-excel"
+    }
+  );
+
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = fileName;
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
+}
