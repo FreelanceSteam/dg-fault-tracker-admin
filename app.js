@@ -988,7 +988,13 @@ async function renderSites(rows) {
 
 
   if (!rows.length) {
+if (document.getElementById("siteTotalCount")) {
+  document.getElementById("siteTotalCount").innerText = "0";
+}
 
+if (document.getElementById("siteTechnicianCount")) {
+  document.getElementById("siteTechnicianCount").innerText = "0";
+}
     body.innerHTML =
       '<tr><td colspan="3" class="loading">' +
       "No sites found." +
@@ -1107,7 +1113,7 @@ escapeHtml(
         escapeHtml(site) +
         '" ' +
         'onchange="markSiteChange(this)" ' +
-        'style="padding:8px;border:1px solid #cbd5e1;border-radius:7px;min-width:190px">' +
+        'class="site-tech-select">' +
 
         options +
 
