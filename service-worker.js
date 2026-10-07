@@ -5,9 +5,9 @@ const APP_SHELL = [
   "./index.html",
   "./app.js",
   "./manifest.json",
-  "./dg-fault-tracker-icon-192.png",
-  "./dg-fault-tracker-icon-512.png",
-  "./dg-fault-tracker-icon-180.png"
+ "./dg-fault-tracker-admin-icon-192.png",
+"./dg-fault-tracker-admin-icon-512.png",
+"./dg-fault-tracker-admin-icon-180.png"
 ];
 
 self.addEventListener("install", function(event) {
