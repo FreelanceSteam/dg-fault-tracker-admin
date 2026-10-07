@@ -2,7 +2,7 @@
   "name": "DG Fault Tracker - Admin",
   "short_name": "DG Admin",
   "description": "DG Fault Tracker Admin Control Center",
-  "start_url": "./",
+  "start_url": "./home.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
