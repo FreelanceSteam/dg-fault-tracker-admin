@@ -673,6 +673,80 @@ tr:hover td{
   }
 
 }
+      /* ================= SITE MASTER MOBILE UI ================= */
+
+@media (max-width: 650px) {
+
+  .site-master-title {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .site-master-title-left {
+    width: 100%;
+  }
+
+  .site-master-stats {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .site-master-stat {
+    width: 100%;
+    min-width: 0;
+    padding: 12px 8px;
+  }
+
+  .site-master-stat-label {
+    font-size: 11px;
+  }
+
+  .site-master-stat-value {
+    font-size: 20px;
+  }
+
+  .site-master-card {
+    padding: 12px;
+  }
+
+  .site-master-card .toolbar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .site-master-card .toolbar .search {
+    grid-column: 1 / -1;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .site-master-card .toolbar .btn {
+    width: 100%;
+    min-width: 0;
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+
+  .site-master-table {
+    min-width: 650px;
+  }
+
+  .site-master-table th,
+  .site-master-table td {
+    padding: 10px 8px;
+  }
+
+  .site-tech-select {
+    min-width: 180px !important;
+    width: 180px;
+    padding: 9px !important;
+  }
+
+}
 </style>
 
 </head>
