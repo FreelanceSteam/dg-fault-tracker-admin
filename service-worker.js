@@ -3,6 +3,7 @@ const CACHE_NAME = "dg-admin-v1";
 const APP_SHELL = [
   "./",
   "./index.html",
+  "./home.html",
   "./app.js",
   "./manifest.json",
  "./dg-fault-tracker-admin-icon-192.png",
