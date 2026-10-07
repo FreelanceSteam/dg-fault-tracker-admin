@@ -9,7 +9,15 @@
       content="width=device-width, initial-scale=1.0">
 
 <title>DG Fault Tracker - Admin</title>
+<link rel="manifest" href="./manifest.json">
 
+<meta name="theme-color" content="#123f7a">
+
+<link rel="apple-touch-icon" href="./dg-fault-tracker-icon-180.png">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+<meta name="apple-mobile-web-app-title" content="DG Admin">
 <style>
 
 *{
@@ -766,10 +774,48 @@ tr:hover td{
   </div>
 
   <div class="header-badge">
-    ADMIN PANEL
-  </div>
+  ADMIN PANEL
+</div>
+
+<!-- PWA INSTALL BUTTON -->
+<button
+  id="installAppBtn"
+  class="btn"
+  onclick="installAdminApp()"
+  style="
+    display:none;
+    margin-left:10px;
+    background:#f59e0b;
+    color:#ffffff;
+    border:none;
+    font-weight:700;
+    box-shadow:0 4px 12px rgba(245,158,11,0.25);
+  "
+>
+  📲 Install Admin App
+</button>
+
+<!-- iPHONE INSTALL HELP -->
+<div
+  id="iosInstallHelp"
+  style="
+    display:none;
+    margin-top:10px;
+    padding:10px 14px;
+    border-radius:10px;
+    background:#eff6ff;
+    color:#1e3a8a;
+    font-size:13px;
+    font-weight:600;
+  "
+>
+  📱 iPhone/iPad: Safari में
+  <strong>Share → Add to Home Screen</strong>
+  चुनें।
+</div>
 
 </header>
+
 
 
 <!-- ================= TABS ================= -->
@@ -1221,7 +1267,141 @@ tr:hover td{
 
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
       <script src="app.js"></script>
+<script>
+/* ================= ADMIN PWA ================= */
 
+if ("serviceWorker" in navigator) {
+
+  window.addEventListener("load", function () {
+
+    navigator.serviceWorker
+      .register("./service-worker.js")
+      .then(function () {
+
+        console.log("DG Admin Service Worker registered");
+
+      })
+      .catch(function (error) {
+
+        console.error(
+          "PWA service worker registration failed:",
+          error
+        );
+
+      });
+
+  });
+
+}
+
+
+/* ================= INSTALL APP ================= */
+
+let deferredInstallPrompt = null;
+
+
+window.addEventListener(
+  "beforeinstallprompt",
+  function (event) {
+
+    event.preventDefault();
+
+    deferredInstallPrompt = event;
+
+    const button =
+      document.getElementById("installAppBtn");
+
+    if (button) {
+
+      button.style.display = "inline-flex";
+
+    }
+
+  }
+);
+
+
+window.addEventListener(
+  "appinstalled",
+  function () {
+
+    deferredInstallPrompt = null;
+
+    const button =
+      document.getElementById("installAppBtn");
+
+    if (button) {
+
+      button.style.display = "none";
+
+    }
+
+  }
+);
+
+
+function installAdminApp() {
+
+  if (!deferredInstallPrompt) {
+
+    return;
+
+  }
+
+  deferredInstallPrompt.prompt();
+
+  deferredInstallPrompt.userChoice
+    .then(function () {
+
+      deferredInstallPrompt = null;
+
+      const button =
+        document.getElementById("installAppBtn");
+
+      if (button) {
+
+        button.style.display = "none";
+
+      }
+
+    });
+
+}
+
+
+/* ================= iPHONE INSTALL HELP ================= */
+
+(function () {
+
+  const isIOS =
+    /iphone|ipad|ipod/i.test(
+      navigator.userAgent
+    );
+
+  const isStandalone =
+    window.navigator.standalone === true ||
+    window.matchMedia(
+      "(display-mode: standalone)"
+    ).matches;
+
+  const help =
+    document.getElementById(
+      "iosInstallHelp"
+    );
+
+  if (
+    isIOS &&
+    !isStandalone &&
+    help
+  ) {
+
+    help.style.display = "block";
+
+  }
+
+})();
+
+</script>
 </body>
 
 </html>
