@@ -976,7 +976,39 @@ async function loadTechnicianNames() {
 
 }
 
+function getSiteTypeClass(type) {
 
+  const value =
+    String(type || "")
+      .trim()
+      .toLowerCase();
+
+  if (value === "css") {
+    return "site-type-css";
+  }
+
+  if (value === "indoor") {
+    return "site-type-indoor";
+  }
+
+  if (value === "outdoor") {
+    return "site-type-outdoor";
+  }
+
+  if (value === "shared") {
+    return "site-type-shared";
+  }
+
+  if (value.startsWith("mag")) {
+    return "site-type-mag";
+  }
+
+  if (value === "ibs") {
+    return "site-type-ibs";
+  }
+
+  return "site-type-default";
+}
 async function renderSites(rows) {
 
   const body =
@@ -1092,12 +1124,8 @@ escapeHtml(site) +
 "</strong></td>" +
 
         "<td>" +
-"<span class=\"site-type-badge site-type-" +
-String(
-  row.siteType || ""
-)
-  .toLowerCase()
-  .replace(/\s+/g, "-") +
+"<span class=\"site-type-badge " +
+getSiteTypeClass(row.siteType) +
 "\">" +
 escapeHtml(
   row.siteType ||
