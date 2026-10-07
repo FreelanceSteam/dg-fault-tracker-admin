@@ -1,1 +1,25 @@
-
+{
+  "name": "DG Fault Tracker - Admin",
+  "short_name": "DG Admin",
+  "description": "DG Fault Tracker Admin Control Center",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f7fb",
+  "theme_color": "#123f7a",
+  "icons": [
+    {
+      "src": "./dg-fault-tracker-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./dg-fault-tracker-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
