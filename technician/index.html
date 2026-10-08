@@ -1,1 +1,183 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123f7a">
+  <title>DG Fault Tracker - Technician</title>
+
+  <link rel="apple-touch-icon"
+    href="https://freelancesteam.github.io/dg-fault-tracker-admin/technician/dg-fault-technician-icon-180.png">
+  <link rel="icon" type="image/png"
+    href="https://freelancesteam.github.io/dg-fault-tracker-admin/technician/dg-fault-technician-icon-192.png">
+
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #edf4ff;
+      color: #17365f;
+    }
+    header {
+      background: linear-gradient(120deg, #10458e, #0787ed);
+      color: white;
+      padding: 22px 18px;
+      box-shadow: 0 4px 12px #123f7a30;
+    }
+    header h1 { margin: 0; font-size: 25px; }
+    header p { margin: 7px 0 0; }
+    main {
+      width: min(760px, 100%);
+      margin: 22px auto;
+      padding: 0 14px;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 5px 20px #17365f12;
+    }
+    h2 { margin: 0 0 14px; font-size: 19px; }
+    #status {
+      text-align: center;
+      padding: 18px;
+      border-radius: 12px;
+      background: #e0edff;
+      color: #174b89;
+    }
+    #technicianName { font-size: 22px; font-weight: 700; }
+    #siteCount { color: #64748b; margin-top: 8px; }
+    #sites {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 9px;
+    }
+    .site {
+      background: #f3f7ff;
+      border: 1px solid #d9e6fb;
+      border-radius: 9px;
+      padding: 12px;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+    .error { background: #fee2e2 !important; color: #991b1b !important; }
+    footer {
+      text-align: center;
+      padding: 18px;
+      color: #64748b;
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>⚡ DG Fault Tracker</h1>
+    <p>Technician Fault Management System</p>
+  </header>
+
+  <main>
+    <div id="status">Loading technician details...</div>
+
+    <section class="card" id="profile" hidden>
+      <h2>Technician Details</h2>
+      <div id="technicianName"></div>
+      <div id="siteCount"></div>
+    </section>
+
+    <section class="card" id="siteCard" hidden>
+      <h2>My Assigned Sites</h2>
+      <div id="sites"></div>
+    </section>
+  </main>
+
+  <footer>DG Fault Tracker · Technician Portal</footer>
+
+  <script>
+    const API_URL =
+      "https://script.google.com/macros/s/AKfycbzY8la37LIrnj4T6Uy4lUL5DY21NzpLnaNfbg3TZST7KpaYTesaQ3qFbCqk8QsQSZT0PA/exec";
+
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token") || "";
+
+    function showError(message) {
+      const status = document.getElementById("status");
+      status.className = "error";
+      status.textContent = message;
+    }
+
+    function loadTechnician() {
+      if (!token) {
+        showError("Invalid Technician Link: token is missing.");
+        return;
+      }
+
+      const callback = "dgTechCallback";
+      const script = document.createElement("script");
+      const timeout = setTimeout(function() {
+        showError("Request timed out. Please refresh and try again.");
+        script.remove();
+      }, 20000);
+
+      window[callback] = function(response) {
+        clearTimeout(timeout);
+        script.remove();
+        delete window[callback];
+
+        if (!response || !response.success || !response.data) {
+          showError(
+            response && response.message
+              ? response.message
+              : "Unable to load technician details."
+          );
+          return;
+        }
+
+        const data = response.data;
+        const sites = Array.isArray(data.sites) ? data.sites : [];
+
+        document.getElementById("technicianName").textContent =
+          data.technician || "Technician";
+
+        document.getElementById("siteCount").textContent =
+          "Assigned Sites: " + sites.length;
+
+        const siteContainer = document.getElementById("sites");
+        siteContainer.replaceChildren();
+
+        sites.forEach(function(site) {
+          const item = document.createElement("div");
+          item.className = "site";
+          item.textContent = site;
+          siteContainer.appendChild(item);
+        });
+
+        document.getElementById("profile").hidden = false;
+        document.getElementById("siteCard").hidden = false;
+        document.getElementById("status").textContent =
+          "Technician details loaded successfully.";
+      };
+
+      const query = new URLSearchParams({
+        action: "technicianData",
+        token: token,
+        callback: callback
+      });
+
+      script.onerror = function() {
+        clearTimeout(timeout);
+        showError("Could not connect to the server. Please try again.");
+      };
+
+      script.src = API_URL + "?" + query.toString();
+      document.body.appendChild(script);
+    }
+
+    loadTechnician();
+  </script>
+</body>
+</html>
+
