@@ -101,7 +101,8 @@
       "https://script.google.com/macros/s/AKfycbzY8la37LIrnj4T6Uy4lUL5DY21NzpLnaNfbg3TZST7KpaYTesaQ3qFbCqk8QsQSZT0PA/exec";
 
     const params = new URLSearchParams(window.location.search);
-    const token = params.get("token") || "";
+const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+const token = params.get("token") || hashParams.get("token") || "";
 
     function showError(message) {
       const status = document.getElementById("status");
