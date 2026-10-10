@@ -55,5 +55,39 @@ const token = urlToken || localStorage.getItem("dg_fault_technician_token") || "
     });
   }
 </script>
+  
+<div id="installPrompt" style="display:none;position:fixed;bottom:20px;left:16px;right:16px;background:#123f7a;color:white;padding:18px;border-radius:16px;z-index:99999;box-shadow:0 5px 20px #555">
+  <b>Install DG Fault App</b>
+  <p style="margin:8px 0">Install the app on your home screen for quick access.</p>
+  <button id="installAppBtn" style="padding:12px 20px;background:#ffd400;color:#123f7a;border:0;border-radius:8px;font-weight:bold">Install App</button>
+  <button id="closeInstallPrompt" style="padding:12px;background:white;color:#123f7a;border:0;border-radius:8px">Later</button>
+</div>
+
+<script>
+let deferredInstallPrompt;
+
+window.addEventListener("beforeinstallprompt", function(event) {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  document.getElementById("installPrompt").style.display = "block";
+});
+
+document.getElementById("installAppBtn").addEventListener("click", async function() {
+  if (!deferredInstallPrompt) {
+    alert("Chrome menu se Install app ya Add to Home screen select karein.");
+    return;
+  }
+
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  document.getElementById("installPrompt").style.display = "none";
+});
+
+document.getElementById("closeInstallPrompt").addEventListener("click", function() {
+  document.getElementById("installPrompt").style.display = "none";
+});
+</script>
 </body>
+
 </html>
