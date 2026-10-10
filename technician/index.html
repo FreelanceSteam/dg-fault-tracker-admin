@@ -23,9 +23,17 @@
 
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbzY8la37LIrnj4T6Uy4lUL5DY21NzpLnaNfbg3TZST7KpaYTesaQ3qFbCqk8QsQSZT0PA/exec";
-    const params = new URLSearchParams(window.location.search);
-    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-    const token = params.get("token") || hashParams.get("token") || "";
+    
+const params = new URLSearchParams(window.location.search);
+const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+const urlToken = params.get("token") || hashParams.get("token") || "";
+
+if (urlToken) {
+  localStorage.setItem("dg_fault_technician_token", urlToken);
+}
+
+const token = urlToken || localStorage.getItem("dg_fault_technician_token") || "";
+
 
     if (!token) {
       document.getElementById("technicianApp").hidden = true;
