@@ -1365,6 +1365,7 @@ async function loadTechnicians(forceRefresh = true) {
         "<th>Site Count</th>" +
         "<th>Token</th>" +
         "<th>Technician Link</th>" +
+         "<th>Action</th>" +
 
         "</tr>";
 
