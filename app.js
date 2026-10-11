@@ -1425,7 +1425,7 @@ function renderTechnicians(rows) {
   if (!rows.length) {
 
     body.innerHTML =
-      '<tr><td colspan="4" class="loading">' +
+      '<tr><td colspan="5" class="loading">' +
       "No technicians found." +
       "</td></tr>";
 
@@ -1512,7 +1512,15 @@ function renderTechnicians(rows) {
           ) +
 
           "</td>" +
-
+          "<td>" +
+            '<button type="button" ' +
+            'data-name="' + escapeHtml(name) + '" ' +
+            'onclick="deleteTechnicianRow(this.dataset.name)" ' +
+            'style="background:#dc2626;color:white;border:0;' +
+            'padding:6px 10px;border-radius:6px;cursor:pointer">' +
+            "Delete" +
+            "</button>" +
+          "</td>" +
           "</tr>"
 
         );
@@ -2402,6 +2410,34 @@ function downloadTableExcel(tableId, fileName) {
     }
 
 }
+async function deleteTechnicianRow(name) {
+  if (!name) {
+    alert("Technician name not found.");
+    return;
+  }
 
+  if (!confirm("Delete technician: " + name + "?")) {
+    return;
+  }
+
+  try {
+    const response = await apiGet("deleteTechnician", {
+      name: name
+    });
+
+    alert(
+      response && response.message
+        ? response.message
+        : "Request completed."
+    );
+
+    await loadTechnicians(true);
+  } catch (error) {
+    alert(
+      "Delete failed: " +
+      (error && error.message ? error.message : error)
+    );
+  }
+}
 
 
