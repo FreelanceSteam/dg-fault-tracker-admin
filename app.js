@@ -469,10 +469,11 @@ function renderFaultHeader() {
     "DG KVA",
     "Fault",
     "Remark",
-    "Docket",
-    "Fault Date",
-    "Status"
-  ];
+   "Docket",
+"Fault Date",
+"Closure Date",
+"Status"
+];
 
 
   head.innerHTML =
@@ -589,7 +590,7 @@ function renderFaults(rows) {
       "<td>" + escapeHtml(row.remark || "") + "</td>" +
       "<td>" + escapeHtml(row.docket || "") + "</td>" +
       "<td>" + escapeHtml(row.faultDate || "") + "</td>" +
-
+"<td>" + escapeHtml(row.closureDate || "") + "</td>" +
       "<td>" +
         '<div style="display:flex;align-items:center;gap:6px;white-space:nowrap;">' +
 
