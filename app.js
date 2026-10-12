@@ -737,7 +737,8 @@ function filterFaults() {
             row.remark,
             row.docket,
             row.faultDate,
-            row.status
+row.closureDate,
+row.status
           ]
             .join(" ")
             .toLowerCase();
