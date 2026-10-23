@@ -755,6 +755,110 @@ tr:hover td{
   }
 
 }
+
+/* ===== FINAL RM AUDIT INSPIRED DASHBOARD THEME ===== */
+:root{--rm-blue:#0754c8;--rm-navy:#06245d;--rm-yellow:#ffca18;--rm-cyan:#00b9f4;--rm-ink:#10264d;--rm-muted:#62748c;--rm-line:#d5e5f8;}
+body{color:var(--rm-ink);background:radial-gradient(circle at 8% 0%,rgba(0,185,244,.18),transparent 28%),linear-gradient(145deg,#e9f4ff,#f8fbff 50%,#e6f1ff);}
+.header{position:relative;isolation:isolate;overflow:hidden;gap:18px;flex-wrap:wrap;background:linear-gradient(120deg,#0754c8 0%,#063b98 48%,#06245d 100%);border-bottom:5px solid var(--rm-yellow);box-shadow:0 12px 30px rgba(6,36,93,.28);}
+.header:after{content:"";position:absolute;z-index:-1;width:360px;height:360px;right:8%;top:-250px;border:1px solid rgba(255,255,255,.18);border-radius:50%;box-shadow:0 0 0 35px rgba(255,255,255,.035),0 0 0 70px rgba(255,255,255,.025);}
+.header-left h1{font-size:clamp(23px,2vw,32px);letter-spacing:.2px;text-shadow:0 2px 10px rgba(0,0,0,.18);}
+.header-left p{font-size:14px;color:#dbeafe;}
+.header-badge{background:linear-gradient(135deg,#ffe56b,#ffca18);color:#06245d;border-radius:999px;box-shadow:0 5px 16px rgba(0,0,0,.2);padding:10px 16px;}
+.tabs{background:rgba(255,255,255,.96);border-bottom:1px solid var(--rm-line);box-shadow:0 6px 20px rgba(6,36,93,.08);backdrop-filter:blur(12px);}
+.tab{border:1px solid transparent;border-radius:13px;transition:transform .18s ease,box-shadow .18s ease,background .18s ease;}
+.tab:hover{background:#e4f1ff;transform:translateY(-1px);}
+.tab.active{background:linear-gradient(135deg,#0754c8,#06245d);color:white;box-shadow:0 6px 0 rgba(6,36,93,.12),0 9px 18px rgba(7,84,200,.24);}
+.container{max-width:1800px;padding:22px;}
+.section-title{color:var(--rm-navy);font-weight:800;letter-spacing:-.25px;}
+.card{border:1px solid rgba(213,229,248,.95);border-radius:20px;background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(242,248,255,.97));box-shadow:0 10px 28px rgba(6,36,93,.09),inset 0 1px 0 #fff;margin-bottom:20px;}
+.kpi-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;}
+.kpi{position:relative;overflow:hidden;border:1px solid #d6e6fa;border-left:0;border-radius:19px;background:linear-gradient(145deg,#fff,#f3f8ff);box-shadow:0 9px 22px rgba(6,36,93,.10),inset 0 1px 0 #fff;transition:transform .18s ease,box-shadow .18s ease;}
+.kpi:before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#0754c8,#00b9f4);}
+.kpi:hover{transform:translateY(-3px);box-shadow:0 14px 26px rgba(6,36,93,.15);}
+.kpi-label{color:#62748c;letter-spacing:.35px;}
+.btn{border-radius:12px;padding:11px 16px;box-shadow:0 4px 0 rgba(6,36,93,.12),0 7px 15px rgba(6,36,93,.10);transition:transform .16s ease,box-shadow .16s ease,filter .16s ease;}
+.btn:hover{opacity:1;filter:brightness(1.04);transform:translateY(-2px);box-shadow:0 6px 0 rgba(6,36,93,.08),0 11px 18px rgba(6,36,93,.14);}
+.btn-blue{background:linear-gradient(135deg,#0879e8,#062f80);color:#fff;}
+.btn-green{background:linear-gradient(135deg,#00b76a,#00834f);color:#fff;}
+.btn-red{background:linear-gradient(135deg,#ff5264,#d92343);color:#fff;}
+.btn-gray{background:linear-gradient(135deg,#7b8ca6,#53657f);color:#fff;}
+.btn-yellow{background:linear-gradient(135deg,#ffe15c,#ffca18);color:#06245d;border:0;border-radius:999px;font-weight:800;padding:10px 16px;cursor:pointer;box-shadow:0 4px 0 rgba(154,107,0,.13),0 7px 14px rgba(6,36,93,.08);}
+.search,.form-group input,.form-group select,.site-tech-select{border-color:#cbdcf1;border-radius:11px;}
+.search:focus,select:focus,input:focus{border-color:var(--rm-cyan);box-shadow:0 0 0 3px rgba(0,185,244,.15);}
+.table-wrap{border-color:var(--rm-line);border-radius:14px;box-shadow:0 5px 16px rgba(6,36,93,.05);}
+th{background:linear-gradient(120deg,#06245d,#0754c8);}
+td{color:#1d355c;}
+tr:hover td{background:#eaf6ff;}
+.summary-box{border-color:var(--rm-line);border-radius:14px;background:linear-gradient(145deg,#fff,#f0f7ff);box-shadow:inset 0 1px 0 #fff,0 4px 12px rgba(6,36,93,.04);}
+.summary-box strong{color:var(--rm-blue);}
+.dashboard-lower-grid{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(320px,1fr);gap:18px;align-items:stretch;}
+.dashboard-lower-grid .card{min-width:0;margin-bottom:20px;}
+.panel-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:17px;}
+.panel-heading h3{margin:0;color:#0b1f42;font-size:clamp(18px,1.5vw,23px);}
+.panel-heading p{margin:6px 0 0;color:#62748c;font-size:13px;}
+.live-pill{display:inline-flex;padding:8px 12px;border-radius:999px;background:#e2efff;color:#0754c8;font-size:10px;font-weight:900;letter-spacing:.6px;white-space:nowrap;}
+.dg-make-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;}
+.dg-make-column{min-width:0;overflow:hidden;border:1px solid #d4e4f8;border-radius:17px;background:linear-gradient(145deg,#fff,#f1f7ff);box-shadow:0 7px 18px rgba(6,36,93,.08),inset 0 1px 0 #fff;}
+.dg-make-top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:13px 12px;color:white;background:linear-gradient(125deg,var(--make-dark),var(--make-color));min-height:70px;}
+.dg-make-title{font-size:14px;font-weight:900;overflow-wrap:anywhere;}
+.dg-make-total{text-align:right;flex-shrink:0;}
+.dg-make-total small{display:block;font-size:10px;opacity:.88;font-weight:700;}
+.dg-make-total strong{font-size:25px;color:#ffdf3d;line-height:1.1;}
+.dg-make-rows{padding:8px;display:grid;gap:6px;}
+.dg-make-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 9px;border-radius:8px;background:linear-gradient(100deg,#edf5ff,#e5f0ff);color:#2b4d7b;font-size:11px;font-weight:700;}
+.dg-make-row span{min-width:0;overflow-wrap:anywhere;}
+.dg-make-row strong{color:#0754c8;font-size:14px;flex-shrink:0;}
+.make-eicher{--make-color:#0879e8;--make-dark:#063c9a;}
+.make-kirloskar{--make-color:#00a5b5;--make-dark:#006477;}
+.make-mm{--make-color:#8437ff;--make-dark:#4b08b8;}
+.make-perfect{--make-color:#f0aa00;--make-dark:#a85b00;}
+.summary-loading{padding:22px;color:#62748c;grid-column:1/-1;}
+.recent-table-wrap{max-height:420px;}
+.recent-table{min-width:540px;}
+.recent-table th{font-size:11px;padding:10px 8px;}
+.recent-table td{font-size:11px;padding:9px 8px;}
+.recent-status{display:inline-block;padding:5px 8px;border-radius:999px;font-size:10px;font-weight:800;white-space:nowrap;background:#e7effa;color:#25466f;}
+.recent-status.open{background:#ffe0e4;color:#bd1230;}
+.recent-status.closed{background:#d4f8e7;color:#087b4d;}
+.recent-status.progress{background:#fff0bd;color:#8b5a00;}
+.recent-status.waiting{background:#eadbff;color:#6530ba;}
+@media(max-width:1200px){.dg-make-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.dashboard-lower-grid{grid-template-columns:1fr;}}
+@media(max-width:800px){.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.container{padding:14px;}.header{padding:18px;}}
+@media(max-width:420px){.dg-make-grid{gap:8px;}.dg-make-top{padding:10px 8px;}.dg-make-title{font-size:12px;}.dg-make-row{font-size:10px;padding:7px;}.dg-make-row strong{font-size:12px;}}
+
+
+/* RM-inspired full-width header and saturated dashboard finish */
+.header {display:flex; align-items:center; gap:22px; min-height:132px; padding:18px 28px; background:linear-gradient(120deg,#0754c8 0%,#063a91 48%,#06245d 100%); border-bottom:5px solid #ffca18; box-shadow:0 12px 30px rgba(6,36,93,.28);}
+.header-left {display:flex; align-items:center; gap:18px; min-width:330px; flex:1;}
+.admin-brand-logo {width:78px;height:78px;object-fit:contain;border-radius:18px;border:2px solid rgba(255,255,255,.65);box-shadow:0 8px 20px rgba(0,0,0,.24);background:#fff;}
+.admin-brand-copy h1 {margin:0;color:#fff;font-size:clamp(24px,2.2vw,36px);font-weight:900;letter-spacing:.2px;text-shadow:0 2px 8px rgba(0,0,0,.2);}
+.admin-brand-copy p {margin:5px 0 0;color:#ffca18;font-size:clamp(14px,1.2vw,20px);font-weight:800;}
+.header-badge {background:linear-gradient(135deg,#ffdf38,#ffbd00);color:#06245d;border-radius:999px;padding:13px 22px;font-weight:900;box-shadow:0 5px 0 rgba(111,75,0,.18),0 8px 18px rgba(0,0,0,.15);white-space:nowrap;}
+.tabs {display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:14px 24px;background:linear-gradient(180deg,#fff,#f2f7ff);border-bottom:1px solid #c9def8;box-shadow:0 7px 18px rgba(6,36,93,.08);}
+.tab {border-radius:999px;padding:13px 20px;background:linear-gradient(145deg,#0879e8,#064c99);color:#fff;border:1px solid rgba(255,255,255,.28);font-weight:800;box-shadow:0 4px 0 rgba(6,36,93,.16),0 6px 14px rgba(6,36,93,.13);transition:transform .18s,filter .18s;}
+.tab:hover {transform:translateY(-2px);filter:brightness(1.08);}
+.tab.active {background:linear-gradient(135deg,#ffdf38,#ffbd00);color:#06245d;box-shadow:0 4px 0 rgba(111,75,0,.18),0 8px 16px rgba(255,202,24,.28);}
+.kpi:nth-child(1)::after{background:#0879e8}.kpi:nth-child(2)::after{background:#ff304b}.kpi:nth-child(3)::after{background:#ffbd00}.kpi:nth-child(4)::after{background:#00b86b}.kpi:nth-child(5)::after{background:#8a2cff}.kpi:nth-child(6)::after{background:#00a9d6}.kpi:nth-child(7)::after{background:#dcecff}.kpi:nth-child(8)::after{background:#ff9fc6}
+.kpi:nth-child(1) .kpi-value{color:#0879e8}.kpi:nth-child(2) .kpi-value{color:#f12840}.kpi:nth-child(3) .kpi-value{color:#d98900}.kpi:nth-child(4) .kpi-value{color:#00a85a}.kpi:nth-child(5) .kpi-value{color:#7d2bff}.kpi:nth-child(6) .kpi-value{color:#009bbf}.kpi:nth-child(7) .kpi-value{color:#0754c8}.kpi:nth-child(8) .kpi-value{color:#d52e73}
+@media(max-width:800px){.header{align-items:flex-start;flex-wrap:wrap;padding:16px}.header-left{min-width:0;width:100%}.admin-brand-logo{width:62px;height:62px}.header-badge{margin-left:80px}.tabs{padding:10px}.tab{padding:10px 13px}}
+
+
+/* Dashboard chart and filters — isolated from original management tables */
+.status-chart-layout{display:flex;align-items:center;gap:30px;flex-wrap:wrap}
+.fault-status-donut{width:190px;height:190px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#0c69d9 0 100%);position:relative;flex-shrink:0}
+.fault-status-donut:before{content:"";position:absolute;inset:30px;border-radius:50%;background:#fff}
+.fault-status-donut span{position:relative;z-index:1;text-align:center;font-size:28px;font-weight:900;color:#06245d}
+.fault-status-donut small{display:block;font-size:10px;letter-spacing:1px}
+.status-legend{display:grid;grid-template-columns:repeat(2,minmax(120px,1fr));gap:12px;flex:1}
+.status-legend-item{display:flex;align-items:center;gap:8px;font-size:13px}
+.status-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.dashboard-filter-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.dashboard-filter-grid label{font-weight:700;font-size:12px;color:#06245d;display:flex;flex-direction:column;gap:6px}
+.dashboard-filter-grid input,.dashboard-filter-grid select{min-width:0;width:100%;padding:11px;border:1px solid #c9d8f0;border-radius:10px;background:#fff;color:#102b55}
+.dashboard-filter-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:18px}
+#dashboardFilterCount{font-weight:700;color:#0754c8}
+@media(max-width:720px){.dashboard-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.status-legend{grid-template-columns:1fr}}
+@media(max-width:420px){.dashboard-filter-grid{grid-template-columns:1fr}}
 </style>
 
 </head>
@@ -767,9 +871,10 @@ tr:hover td{
 
   <div class="header-left">
 
-    <h1>⚡ DG Fault Tracker</h1>
+    <img class="admin-brand-logo" src="./dg-fault-tracker-admin-icon-180.png" alt="DG Fault Tracker Admin logo">
+    <div class="admin-brand-copy"><h1>DG Fault Tracker</h1>
 
-    <p>Admin Control Center</p>
+    <p>Admin Control Center</p></div>
 
   </div>
 
@@ -963,6 +1068,52 @@ tr:hover td{
 
     </div>
 
+    <div class="card status-overview-card">
+      <div class="panel-heading"><div><h3>📈 Site Fault Status</h3><p>Fault record status distribution (not live site uptime)</p></div></div>
+      <div class="status-chart-layout"><div id="faultStatusDonut" class="fault-status-donut"><span id="donutTotal">0<small>FAULTS</small></span></div><div id="faultStatusLegend" class="status-legend">Loading status details…</div></div>
+    </div>
+    <div class="dashboard-lower-grid">
+      <div class="card dg-make-card">
+        <div class="panel-heading">
+          <div>
+            <h3>⚙️ DG Make Summary</h3>
+            <p>Fault-wise breakdown from actual records</p>
+          </div>
+          <span class="live-pill">● LIVE DATA</span>
+        </div>
+        <div id="dgMakeSummary" class="dg-make-grid">
+          <div class="summary-loading">Loading DG make details…</div>
+        </div>
+      </div>
+
+      <div class="card recent-faults-card">
+        <div class="panel-heading">
+          <div>
+            <h3>🧾 Recent Faults</h3>
+            <p>Latest records from the fault tracker</p>
+          </div>
+          <button class="btn btn-yellow" onclick="openTab('faults', document.querySelectorAll('.tab')[1])">View All</button>
+        </div>
+        <div class="table-wrap recent-table-wrap">
+          <table class="recent-table">
+            <thead><tr><th>Date</th><th>Site ID</th><th>DG Make</th><th>Issue</th><th>Status</th></tr></thead>
+            <tbody id="recentFaultBody"><tr><td colspan="5">Loading recent faults…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card dashboard-filter-card">
+      <div class="panel-heading"><div><h3>🔎 Dashboard Search &amp; Filter</h3><p>Filters the DG Make Summary, chart and Recent Faults shown above</p></div></div>
+      <div class="dashboard-filter-grid">
+        <label>Site ID<input id="dashSite" placeholder="Search Site ID" oninput="applyDashboardFilters()"></label>
+        <label>DG Make<select id="dashMake" onchange="applyDashboardFilters()"><option value="">All Makes</option><option>Eicher</option><option>Kirloskar</option><option>M&amp;M</option><option>Perfect</option></select></label>
+        <label>Issue Type<select id="dashIssue" onchange="applyDashboardFilters()"><option value="">All Issues</option></select></label>
+        <label>Status<select id="dashStatus" onchange="applyDashboardFilters()"><option value="">All Statuses</option></select></label>
+        <label>From Date<input id="dashFrom" type="date" onchange="applyDashboardFilters()"></label>
+        <label>To Date<input id="dashTo" type="date" onchange="applyDashboardFilters()"></label>
+      </div>
+      <div class="dashboard-filter-actions"><button class="btn btn-blue" onclick="loadFaults(true)">🔄 Refresh Records</button><button class="btn btn-green" onclick="downloadDashboardExcel()">📥 Export Full Excel</button><button class="btn btn-yellow" onclick="clearDashboardFilters()">Clear Filters</button><span id="dashboardFilterCount" aria-live="polite"></span></div>
+    </div>
   </div>
 
 </section>
@@ -1265,7 +1416,7 @@ tr:hover td{
 </main>
 
 
-<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
       <script src="app.js"></script>
 <script>
 /* ================= ADMIN PWA ================= */

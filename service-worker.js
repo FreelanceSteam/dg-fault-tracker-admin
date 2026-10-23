@@ -1,4 +1,4 @@
-const CACHE_NAME = "dg-admin-v1";
+const CACHE_NAME = "dg-admin-v4-excel-fix2";
 
 const APP_SHELL = [
   "./",

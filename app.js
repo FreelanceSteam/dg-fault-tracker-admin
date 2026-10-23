@@ -315,6 +315,9 @@ async function loadDashboard(forceRefresh = true) {
     );
 
     dashboardLoaded = true;
+    loadFaults(false).catch(function(error) {
+      console.warn("Dashboard fault insights unavailable:", error);
+    });
 
   } catch(error) {
 
@@ -356,6 +359,123 @@ async function loadDashboard(forceRefresh = true) {
 /* =====================================================
    FAULT TRACKER
    ===================================================== */
+
+
+function populateDashboardFilterOptions(rows) {
+  const fields = [{id:"dashIssue",key:"fault",placeholder:"All Issues"},{id:"dashStatus",key:"status",placeholder:"All Statuses"}];
+  fields.forEach(function(field) {
+    const el=document.getElementById(field.id); if(!el)return;
+    const old=el.value;
+    const values=[...new Set(rows.map(r=>String(r[field.key]||"").trim()).filter(Boolean))].sort();
+    el.replaceChildren(new Option(field.placeholder,""),...values.map(v=>new Option(v,v)));
+    if(values.includes(old))el.value=old;
+  });
+}
+function parseDashboardDate(value) {
+  const s=String(value||"").trim(); if(!s)return null;
+  const d=new Date(s);return Number.isNaN(d.getTime())?null:d;
+}
+function applyDashboardFilters() {
+  const get=id=>String(document.getElementById(id)?.value||"").trim().toLowerCase();
+  const site=get("dashSite"),make=get("dashMake"),issue=get("dashIssue"),status=get("dashStatus");
+  const from=get("dashFrom"),to=get("dashTo");
+  const filtered=(Array.isArray(faultRows)?faultRows:[]).filter(function(r){
+    if(site&&!String(r.site||"").toLowerCase().includes(site))return false;
+    if(make&&String(r.dgMake||"").trim().toLowerCase()!==make)return false;
+    if(issue&&String(r.fault||"").trim().toLowerCase()!==issue)return false;
+    if(status&&String(r.status||"").trim().toLowerCase()!==status)return false;
+    if(from||to){
+      const d=parseDashboardDate(r.entryDate||r.faultDate);
+      if(!d)return false;
+      const date=new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();
+      if(from&&date<new Date(from+"T00:00:00").getTime())return false;
+      if(to&&date>new Date(to+"T00:00:00").getTime())return false;
+    }
+    return true;
+  });
+  renderDashboardFaultInsights(filtered);
+  renderDashboardStatusChart(filtered);
+  const count=document.getElementById("dashboardFilterCount");
+  if(count)count.textContent="Showing "+filtered.length+" of "+faultRows.length+" fault records";
+}
+function clearDashboardFilters(){
+  ["dashSite","dashMake","dashIssue","dashStatus","dashFrom","dashTo"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
+  applyDashboardFilters();
+}
+function normalizeDashboardStatus(value){
+  const raw=String(value||"Open").trim().replace(/\s+/g," ");
+  const lower=raw.toLowerCase();
+  const known={"open":"Open","in progress":"In Progress","closed":"Closed","waiting for material":"Waiting for Material","waiting material":"Waiting for Material","waiting for vendor":"Waiting for Vendor","waiting vendor":"Waiting for Vendor"};
+  return known[lower]||raw;
+}
+function renderDashboardStatusChart(rows){
+  const chart=document.getElementById("faultStatusDonut"),legend=document.getElementById("faultStatusLegend"),total=document.getElementById("donutTotal");
+  if(!chart||!legend)return;
+  const colors=["#ed5c5c","#0c69d9","#16a879","#e8a22e","#8d62d6","#7c8b9e"];
+  const statuses=new Map();
+  rows.forEach(r=>{const key=normalizeDashboardStatus(r.status);statuses.set(key,(statuses.get(key)||0)+1);});
+  const entries=[...statuses.entries()].sort((a,b)=>b[1]-a[1]);
+  let pos=0;const slices=entries.map(([name,count],i)=>{const start=pos;pos+=rows.length?count/rows.length*100:0;return colors[i%colors.length]+" "+start+"% "+pos+"%";});
+  chart.style.background=slices.length?"conic-gradient("+slices.join(",")+")":"#e3e9f2";
+  if(total)total.innerHTML=rows.length+'<small>FAULTS</small>';
+  legend.innerHTML=entries.length?entries.map(([name,count],i)=>'<div class="status-legend-item"><span class="status-dot" style="background:'+colors[i%colors.length]+'"></span><span>'+escapeHtml(name)+'</span><strong>'+count+'</strong></div>').join(""):"No fault records match the selected filters.";
+}
+
+function renderDashboardFaultInsights(rows) {
+  const makes = [
+    { key: "Eicher", cls: "make-eicher" },
+    { key: "Kirloskar", cls: "make-kirloskar" },
+    { key: "M&M", cls: "make-mm" },
+    { key: "Perfect", cls: "make-perfect" }
+  ];
+  const faultTypes = [
+    "GCU", "DG PM", "DG Battery", "DG Contactor",
+    "EB contactor", "Stop Solinoid", "DG pannel Faulty", "DG issue"
+  ];
+  const root = document.getElementById("dgMakeSummary");
+  const recent = document.getElementById("recentFaultBody");
+  const records = Array.isArray(rows) ? rows : [];
+
+  if (root) {
+    root.innerHTML = makes.map(function(make) {
+      const matching = records.filter(function(row) {
+        return String(row && row.dgMake || "").trim().toLowerCase() === make.key.toLowerCase();
+      });
+      const counts = faultTypes.map(function(type) {
+        const count = matching.filter(function(row) {
+          return String(row && row.fault || "").trim().toLowerCase() === type.toLowerCase();
+        }).length;
+        return '<div class="dg-make-row"><span>' + escapeHtml(type) + '</span><strong>' + count + '</strong></div>';
+      }).join("");
+      return '<div class="dg-make-column ' + make.cls + '">' +
+        '<div class="dg-make-top"><span class="dg-make-title">' + escapeHtml(make.key) + '</span>' +
+        '<span class="dg-make-total"><small>TOTAL</small><strong>' + matching.length + '</strong></span></div>' +
+        '<div class="dg-make-rows">' + counts + '</div></div>';
+    }).join("");
+  }
+
+  if (recent) {
+    const latest = records.slice().reverse().slice(0, 5);
+    if (!latest.length) {
+      recent.innerHTML = '<tr><td colspan="5">No fault records available.</td></tr>';
+    } else {
+      recent.innerHTML = latest.map(function(row) {
+        const status = String(row.status || "Open");
+        const normalized = status.toLowerCase();
+        let statusClass = "recent-status";
+        if (normalized === "closed") statusClass += " closed";
+        else if (normalized.indexOf("progress") >= 0) statusClass += " progress";
+        else if (normalized.indexOf("waiting") >= 0) statusClass += " waiting";
+        else if (normalized === "open") statusClass += " open";
+        return '<tr><td>' + escapeHtml(row.entryDate || row.faultDate || "—") +
+          '</td><td>' + escapeHtml(row.site || "—") +
+          '</td><td>' + escapeHtml(row.dgMake || "—") +
+          '</td><td>' + escapeHtml(row.fault || "—") +
+          '</td><td><span class="' + statusClass + '">' + escapeHtml(status) + '</span></td></tr>';
+      }).join("");
+    }
+  }
+}
 
 async function loadFaults(forceRefresh = true) {
 
@@ -415,6 +535,8 @@ async function loadFaults(forceRefresh = true) {
     populateFaultTechnicianFilter();
 
     renderFaults(faultRows);
+    populateDashboardFilterOptions(faultRows);
+    applyDashboardFilters();
     faultsLoaded = true;
 
   } catch(error) {
@@ -1836,139 +1958,95 @@ async function addTechnician() {
    ===================================================== */
 
 async function downloadDashboardExcel() {
-
-  const btn =
-    document.getElementById(
-      "excelDashboardBtn"
-    );
-
-
-  if (btn) {
-
-    btn.disabled = true;
-
-    btn.innerText =
-      "⏳ Preparing...";
-
-  }
-
-
+  const btn = document.getElementById("excelDashboardBtn");
+  if (btn) { btn.disabled = true; btn.innerText = "⏳ Preparing..."; }
   try {
-
-    const response =
-      await apiGet(
-        "dashboardExcel"
-      );
-
-
-    if (
-      !response ||
-      !response.base64
-    ) {
-
-      throw new Error(
-        "Excel file data not received."
-      );
-
-    }
-
-
-    const binary =
-      atob(
-        response.base64
-      );
-
-
-    const bytes =
-      new Uint8Array(
-        binary.length
-      );
-
-
-    for (
-      let i = 0;
-      i < binary.length;
-      i++
-    ) {
-
-      bytes[i] =
-        binary.charCodeAt(i);
-
-    }
-
-
-    const blob =
-      new Blob(
-        [bytes],
-        {
-          type:
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    if (typeof XLSX === "undefined") throw new Error("Excel library is not loaded. Please refresh the page.");
+    if (!faultsLoaded) await loadFaults(true);
+    const records = Array.isArray(faultRows) ? faultRows : [];
+    const val = id => (document.getElementById(id)?.textContent || "0").trim();
+    const generated = new Date();
+    const kpis = [
+      ["DG FAULT TRACKER - ADMIN DASHBOARD", ""],
+      ["Generated At", generated.toLocaleString()],
+      ["Metric", "Value"],
+      ["Total Faults", val("totalFaults")],
+      ["Open Faults", val("openFaults")],
+      ["In Progress", val("inProgressFaults")],
+      ["Closed Faults", val("closedFaults")],
+      ["Waiting Material", val("waitingMaterial")],
+      ["Waiting Vendor", val("waitingVendor")],
+      ["Total Sites", val("totalSites")],
+      ["Technicians", val("totalTechnicians")]
+    ];
+    const faultHeaders = ["Entry Date","Technician","Site ID","DG Make","DG KVA","Fault Type","Remark","Docket","Fault Date","Closure Date","Status"];
+    const faultData = records.map(r => [r.entryDate||"",r.technician||"",r.site||"",r.dgMake||"",r.dgKva||"",r.fault||"",r.remark||"",String(r.docket||""),r.faultDate||"",r.closureDate||"",r.status||"Open"]);
+    const makes = ["Eicher","Kirloskar","M&M","Perfect"];
+    const types = ["GCU","DG PM","DG Battery","DG Contactor","EB contactor","Stop Solinoid","DG pannel Faulty","DG issue"];
+    const norm = v => String(v||"").trim().toLowerCase().replace(/\s+/g," ");
+    const makeRows = [["DG Make","Total Faults",...types]];
+    makes.forEach(make => {
+      const subset = records.filter(r => norm(r.dgMake) === norm(make));
+      makeRows.push([make,subset.length,...types.map(t => subset.filter(r => norm(r.fault)===norm(t)).length)]);
+    });
+    const recent = [["Entry Date","Site ID","DG Make","Issue","Status"]].concat(records.slice().reverse().slice(0,50).map(r=>[r.entryDate||"",r.site||"",r.dgMake||"",r.fault||"",r.status||"Open"]));
+    const wb = XLSX.utils.book_new();
+    const navy = "082B63", blue = "0754C8", cyan = "00B8E6", yellow = "FFCA18";
+    const white = "FFFFFF", pale = "EAF3FF", border = "C9DDF8", green = "008F5A";
+    // Shared Excel border style must be in downloadDashboardExcel scope,
+    // because KPI styling below addSheet() also uses it.
+    const borderThin = {top:{style:"thin",color:{rgb:border}},bottom:{style:"thin",color:{rgb:border}},left:{style:"thin",color:{rgb:border}},right:{style:"thin",color:{rgb:border}}};
+    const addSheet = (name, data, widths, opts = {}) => {
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      if (widths) ws["!cols"] = widths.map(w => ({wch:w}));
+      const range = XLSX.utils.decode_range(ws["!ref"] || "A1:A1");
+      const cellStyle = (cell, style) => { if (cell && cell.t !== 'z') cell.s = style; };
+      // Apply consistent dashboard-inspired typography, borders and alternating rows.
+      for (let R=range.s.r; R<=range.e.r; R++) {
+        for (let C=range.s.c; C<=range.e.c; C++) {
+          const addr = XLSX.utils.encode_cell({r:R,c:C});
+          const cell = ws[addr]; if (!cell) continue;
+          const baseStyle = {font:{name:"Aptos",sz:10,color:{rgb:"17365D"}},alignment:{vertical:"center",wrapText:true},border:borderThin,fill:{fgColor:{rgb:(R%2===0?"FFFFFF":"F2F7FF")}}};
+          cellStyle(cell, baseStyle);
+          if (R === 0) cellStyle(cell,{font:{name:"Aptos Display",sz:15,bold:true,color:{rgb:white}},fill:{fgColor:{rgb:navy}},alignment:{vertical:"center",horizontal:"left",wrapText:true},border:borderThin});
+          if ((opts.headerRow !== undefined && R === opts.headerRow) || (opts.headerRow === undefined && R === 0 && !opts.titleRow)) {
+            cellStyle(cell,{font:{name:"Aptos",sz:10,bold:true,color:{rgb:white}},fill:{fgColor:{rgb:blue}},alignment:{vertical:"center",horizontal:"center",wrapText:true},border:borderThin});
+          }
         }
-      );
-
-
-    const url =
-      URL.createObjectURL(
-        blob
-      );
-
-
-    const a =
-      document.createElement(
-        "a"
-      );
-
-
-    a.href = url;
-
-    a.download =
-      "DG_Fault_Tracker_Admin_" +
-      new Date()
-        .toISOString()
-        .slice(0,10) +
-      ".xlsx";
-
-
-    document.body.appendChild(a);
-
-    a.click();
-
-    document.body.removeChild(a);
-
-    URL.revokeObjectURL(url);
-
-
-  } catch(error) {
-
-    console.error(
-      "Excel error:",
-      error
-    );
-
-
-    alert(
-      "❌ Excel download failed.\n\n" +
-      (
-        error.message ||
-        error
-      )
-    );
-
-  } finally {
-
-    if (btn) {
-
-      btn.disabled = false;
-
-      btn.innerText =
-        "📥 Excel";
-
+      }
+      if (opts.titleRow) {
+        for (let C=range.s.c; C<=range.e.c; C++) cellStyle(ws[XLSX.utils.encode_cell({r:0,c:C})],{font:{name:"Aptos Display",sz:16,bold:true,color:{rgb:white}},fill:{fgColor:{rgb:navy}},alignment:{vertical:"center",horizontal:"left"},border:borderThin});
+        if (range.e.c>0) ws['!merges'] = (ws['!merges']||[]).concat([{s:{r:0,c:0},e:{r:0,c:range.e.c}}]);
+      }
+      if (opts.headerRow !== undefined) {
+        const hr=opts.headerRow;
+        for(let C=range.s.c;C<=range.e.c;C++) cellStyle(ws[XLSX.utils.encode_cell({r:hr,c:C})],{font:{name:"Aptos",sz:10,bold:true,color:{rgb:white}},fill:{fgColor:{rgb:blue}},alignment:{vertical:"center",horizontal:"center",wrapText:true},border:borderThin});
+        ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:hr,c:range.s.c},e:{r:range.e.r,c:range.e.c}})};
+        ws['!freeze']={xSplit:0,ySplit:hr+1,topLeftCell:XLSX.utils.encode_cell({r:hr+1,c:0}),activePane:"bottomLeft",state:"frozen"};
+      }
+      ws['!rows'] = Array.from({length:range.e.r+1},(_,r)=>({hpt:(opts.titleRow&&r===0)?30:((opts.headerRow!==undefined&&r===opts.headerRow)?25:20)}));
+      XLSX.utils.book_append_sheet(wb,ws,name);
+      return ws;
+    };
+    const summaryWs = addSheet("Dashboard Summary", kpis, [32,34], {titleRow:true,headerRow:2});
+    // Highlight dashboard KPI values and labels.
+    for (let R=3; R<kpis.length; R++) {
+      const a=XLSX.utils.encode_cell({r:R,c:0}), b=XLSX.utils.encode_cell({r:R,c:1});
+      if(summaryWs[a]) summaryWs[a].s={font:{name:"Aptos",sz:10,bold:true,color:{rgb:navy}},fill:{fgColor:{rgb:"EAF3FF"}},border:borderThin,alignment:{vertical:"center"}};
+      if(summaryWs[b]) summaryWs[b].s={font:{name:"Aptos",sz:12,bold:true,color:{rgb:blue}},fill:{fgColor:{rgb:"FFF5CC"}},border:borderThin,alignment:{vertical:"center",horizontal:"center"}};
     }
-
+    addSheet("All Fault Records", [faultHeaders,...faultData], [20,24,22,16,10,24,42,22,18,18,24], {headerRow:0});
+    addSheet("DG Make Summary", makeRows, [18,14,12,12,14,16,16,20,16,14], {headerRow:0});
+    addSheet("Recent Faults", recent, [20,22,16,24,24], {headerRow:0});
+    const fileName = "DG_Fault_Tracker_Admin_Full_" + generated.toISOString().slice(0,10) + ".xlsx";
+    XLSX.writeFile(wb,fileName);
+  } catch(error) {
+    console.error("Full Excel export error:",error);
+    alert("Excel export failed.\n\n" + (error.message || error));
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerText = "📥 Excel"; }
   }
-
 }
-
 
 /* =====================================================
    HELPER FUNCTIONS
