@@ -859,6 +859,35 @@ tr:hover td{background:#eaf6ff;}
 #dashboardFilterCount{font-weight:700;color:#0754c8}
 @media(max-width:720px){.dashboard-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.status-legend{grid-template-columns:1fr}}
 @media(max-width:420px){.dashboard-filter-grid{grid-template-columns:1fr}}
+/* Premium Central Portal Back Button */
+.central-portal-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 22px;
+  border: 2px solid #FFD700;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #123B70, #061B3A);
+  color: #FFFFFF;
+  font-size: 18px;
+  font-weight: 900;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 5px 0 #020D20, 0 8px 18px rgba(0,0,0,.30);
+  transition: all .2s ease;
+}
+
+.central-portal-back:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 0 #020D20, 0 11px 20px rgba(0,0,0,.35);
+}
+
+@media(max-width:800px) {
+  .central-portal-back {
+    font-size: 15px;
+    padding: 11px 15px;
+  }
+}
 </style>
 
 </head>
@@ -881,7 +910,13 @@ tr:hover td{background:#eaf6ff;}
   <div class="header-badge">
   ADMIN PANEL
 </div>
-
+<a
+  class="central-portal-back"
+  href="https://script.google.com/macros/s/AKfycbwhhsonPghobcrdd73xrYSXYVGOPsP4Sxq8iujt2G2TurkIhA0bDlwQBKbC24Odadxl/exec"
+  target="_top"
+>
+  ⬅ Back to Central Portal
+</a>
 <!-- PWA INSTALL BUTTON -->
 <button
   id="installAppBtn"
